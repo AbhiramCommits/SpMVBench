@@ -1,0 +1,30 @@
+# Build outputs
+build/
+build-*/
+CMakeFiles/
+CMakeCache.txt
+cmake_install.cmake
+*.o
+*.a
+*.so
+*.dylib
+
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Generated data (reproducible via tools/gen_matrices.py and tools/reference.py)
+data/*.mtx
+data/ref/
+
+# macOS
+.DS_Store
+
+# Editor
+.vscode/
+.idea/
+
+# NOTE: everything under results/ is intentionally tracked - those are the
+# real measured numbers that back the README.
