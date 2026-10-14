@@ -24,6 +24,7 @@
 #include "spmvbench/spmv_cpu.hpp"
 #include "spmvbench/stats.hpp"
 #include "spmvbench/timer.hpp"
+#include "spmvbench/validate.hpp"
 
 namespace fs = std::filesystem;
 
@@ -324,8 +325,10 @@ int main(int argc, char** argv) {
   if (cmd == "--stats") return cmd_stats(args);
   if (cmd == "--auto") return cmd_auto(args);
   if (cmd == "--validate") {
-    std::fprintf(stderr, "--validate is not available yet in this build\n");
-    return 2;
+    spmvbench::ValidationOptions opts;
+    opts.data_dir = data_dir();
+    opts.ref_dir = data_dir() + "/ref";
+    return spmvbench::run_validation(opts);
   }
   if (cmd == "--bench") {
     std::fprintf(stderr, "--bench is not available yet in this build\n");

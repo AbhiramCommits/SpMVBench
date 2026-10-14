@@ -140,8 +140,11 @@ def gen_diag_dominant_small() -> str:
     per_row = 8
     rng = np.random.default_rng(4004)
     rcol, rval = [], []
-    for _ in range(n):
-        c = rng.choice(n, size=per_row - 1, replace=False)
+    for i in range(n):
+        # Sample off-diagonal columns from range(n) excluding the diagonal so
+        # the explicit diagonal entry never duplicates an off-diagonal one.
+        c = rng.choice(n - 1, size=per_row - 1, replace=False)
+        c = np.where(c >= i, c + 1, c)
         v = rng.uniform(-1.0, 1.0, size=per_row - 1)
         rcol.append(c)
         rval.append(v)
