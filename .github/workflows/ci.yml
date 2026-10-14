@@ -1,0 +1,52 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  cpu:
+    name: CPU / OpenMP build + tests + integration gate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y cmake g++ python3-pip
+          python3 -m pip install --upgrade pip
+          pip install numpy scipy
+
+      - name: Configure (CUDA OFF)
+        run: cmake -S . -B build -DSPMVBENCH_ENABLE_CUDA=OFF -DCMAKE_BUILD_TYPE=Release
+
+      - name: Build
+        run: cmake --build build -j
+
+      - name: Test
+        run: ctest --test-dir build --output-on-failure
+
+      - name: Generate matrices
+        run: python3 tools/gen_matrices.py
+
+      - name: Generate SciPy references
+        run: python3 tools/reference.py
+
+      - name: Validation gate (fp64 must match SciPy to < 1e-12)
+        run: ./build/bench --validate
+
+  cuda:
+    name: Document the CUDA gap honestly
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Report CUDA availability
+        run: |
+          nvcc --version || echo "no cuda"
+          nvidia-smi || echo "no GPU on this runner"
