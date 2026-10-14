@@ -15,7 +15,8 @@
 
 namespace spmvtest {
 
-inline std::string write_temp(const std::string& name, const std::string& body) {
+inline std::string write_temp(const std::string& name,
+                              const std::string& body) {
   const auto path = std::filesystem::temp_directory_path() / name;
   std::ofstream out(path, std::ios::binary);
   out << body;
@@ -25,13 +26,15 @@ inline std::string write_temp(const std::string& name, const std::string& body) 
 
 // Build a CSR from explicit per-row (column, value) lists (may be unsorted).
 inline spmvbench::CsrMatrix<double> make_csr(
-    int m, int n, const std::vector<std::vector<std::pair<int, double>>>& rows) {
+    int m, int n,
+    const std::vector<std::vector<std::pair<int, double>>>& rows) {
   spmvbench::CsrMatrix<double> A;
   A.m = m;
   A.n = n;
   A.rowptr.assign(m + 1, 0);
   for (int i = 0; i < m; ++i) {
-    A.rowptr[i + 1] = A.rowptr[i] + static_cast<spmvbench::Index>(rows[i].size());
+    A.rowptr[i + 1] =
+        A.rowptr[i] + static_cast<spmvbench::Index>(rows[i].size());
   }
   A.nnz = A.rowptr[m];
   A.colind.resize(static_cast<std::size_t>(A.nnz));
@@ -63,11 +66,13 @@ inline std::vector<double> naive_spmv(const spmvbench::CsrMatrix<double>& A,
 template <typename U>
 inline bool approx_eq(const std::vector<U>& a, const std::vector<double>& b,
                       double tol = 1e-12) {
-  if (a.size() != b.size()) return false;
+  if (a.size() != b.size())
+    return false;
   for (std::size_t i = 0; i < a.size(); ++i) {
     const double d = std::fabs(static_cast<double>(a[i]) - b[i]);
     const double r = std::max(std::fabs(b[i]), 1.0);
-    if (d > tol * r) return false;
+    if (d > tol * r)
+      return false;
   }
   return true;
 }

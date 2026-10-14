@@ -21,8 +21,8 @@ struct RowStats {
   int min_row_nnz = 0;
   int max_row_nnz = 0;
   double stddev_row_nnz = 0.0;
-  double cv_row_nnz = 0.0;        // coefficient of variation = stddev / mean
-  double max_over_mean = 0.0;     // skew indicator
+  double cv_row_nnz = 0.0;     // coefficient of variation = stddev / mean
+  double max_over_mean = 0.0;  // skew indicator
 
   // Histogram of row lengths (histogram[i] = rows with exactly i nnz).
   std::vector<std::int64_t> row_nnz_histogram;

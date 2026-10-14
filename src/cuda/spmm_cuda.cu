@@ -31,12 +31,14 @@ __global__ void spmm_tiled_kernel(DeviceCsr<T> A, const T* __restrict__ B,
   const int lane = threadIdx.x & 31;
   const int warp = threadIdx.x >> 5;
   const int row = blockIdx.x * kWarpsPerBlock + warp;
-  if (row >= A.m) return;
+  if (row >= A.m)
+    return;
   __shared__ Acc s_acc[kWarpsPerBlock][TileK];
 
   for (int t0 = 0; t0 < k; t0 += TileK) {
     const int rem = min(TileK, k - t0);
-    for (int j = lane; j < rem; j += 32) s_acc[warp][j] = Acc(0);
+    for (int j = lane; j < rem; j += 32)
+      s_acc[warp][j] = Acc(0);
     __syncwarp();
     for (Index p = A.rowptr[row]; p < A.rowptr[row + 1]; ++p) {
       const Index col = A.colind[p];
@@ -64,13 +66,15 @@ __global__ void spmm_tiled_bucketed_kernel(DeviceCsr<T> A,
   const int lane = threadIdx.x & 31;
   const int warp = threadIdx.x >> 5;
   const int slot = blockIdx.x * kWarpsPerBlock + warp;
-  if (slot >= n_bucket_rows) return;
+  if (slot >= n_bucket_rows)
+    return;
   const int row = row_ids[slot];
   __shared__ Acc s_acc[kWarpsPerBlock][TileK];
 
   for (int t0 = 0; t0 < k; t0 += TileK) {
     const int rem = min(TileK, k - t0);
-    for (int j = lane; j < rem; j += 32) s_acc[warp][j] = Acc(0);
+    for (int j = lane; j < rem; j += 32)
+      s_acc[warp][j] = Acc(0);
     __syncwarp();
     for (Index p = A.rowptr[row]; p < A.rowptr[row + 1]; ++p) {
       const Index col = A.colind[p];
@@ -112,31 +116,33 @@ void launch_tiled(DeviceCsr<T> A, const T* B, Acc* Y, int k, int tile,
 template <typename T, typename Acc>
 void launch_bucketed(DeviceCsr<T> A, const std::vector<Index>& short_ids,
                      const std::vector<Index>& med_ids,
-                     const std::vector<Index>& long_ids,
-                     const T* B, Acc* Y, int k, int tile, cudaStream_t stream) {
+                     const std::vector<Index>& long_ids, const T* B, Acc* Y,
+                     int k, int tile, cudaStream_t stream) {
   auto launch_one = [&](const std::vector<Index>& ids) {
-    if (ids.empty()) return;
+    if (ids.empty())
+      return;
     Index* d_ids = nullptr;
     cuda_malloc(&d_ids, ids.size() * sizeof(Index));
     CUDA_CHECK(cudaMemcpy(d_ids, ids.data(), ids.size() * sizeof(Index),
                           cudaMemcpyHostToDevice));
-    const int grid = std::max(
-        1, (static_cast<int>(ids.size()) + kWarpsPerBlock - 1) / kWarpsPerBlock);
+    const int grid =
+        std::max(1, (static_cast<int>(ids.size()) + kWarpsPerBlock - 1) /
+                        kWarpsPerBlock);
     switch (tile) {
       case 16:
         spmm_tiled_bucketed_kernel<T, Acc, 16>
-            <<<grid, kWarpsPerBlock * 32, 0, stream>>>(A, d_ids,
-                                                       (int)ids.size(), B, Y, k);
+            <<<grid, kWarpsPerBlock * 32, 0, stream>>>(
+                A, d_ids, (int)ids.size(), B, Y, k);
         break;
       case 64:
         spmm_tiled_bucketed_kernel<T, Acc, 64>
-            <<<grid, kWarpsPerBlock * 32, 0, stream>>>(A, d_ids,
-                                                       (int)ids.size(), B, Y, k);
+            <<<grid, kWarpsPerBlock * 32, 0, stream>>>(
+                A, d_ids, (int)ids.size(), B, Y, k);
         break;
       default:
         spmm_tiled_bucketed_kernel<T, Acc, 32>
-            <<<grid, kWarpsPerBlock * 32, 0, stream>>>(A, d_ids,
-                                                       (int)ids.size(), B, Y, k);
+            <<<grid, kWarpsPerBlock * 32, 0, stream>>>(
+                A, d_ids, (int)ids.size(), B, Y, k);
         break;
     }
     CUDA_CHECK(cudaGetLastError());
@@ -186,9 +192,12 @@ SpmmResult run_tiled(const CsrMatrix<T>& A, const std::vector<T>& B, int k,
   if (balanced) {
     for (int i = 0; i < m; ++i) {
       const int len = A.rowptr[i + 1] - A.rowptr[i];
-      if (len <= 8) short_ids.push_back(i);
-      else if (len <= 64) med_ids.push_back(i);
-      else long_ids.push_back(i);
+      if (len <= 8)
+        short_ids.push_back(i);
+      else if (len <= 64)
+        med_ids.push_back(i);
+      else
+        long_ids.push_back(i);
     }
   }
 
@@ -200,7 +209,8 @@ SpmmResult run_tiled(const CsrMatrix<T>& A, const std::vector<T>& B, int k,
     }
   };
 
-  for (int i = 0; i < warmup; ++i) launch();
+  for (int i = 0; i < warmup; ++i)
+    launch();
   CUDA_CHECK(cudaDeviceSynchronize());
 
   cudaEvent_t start, stop;
@@ -223,7 +233,8 @@ SpmmResult run_tiled(const CsrMatrix<T>& A, const std::vector<T>& B, int k,
   std::vector<Acc> yacc(static_cast<std::size_t>(m) * k);
   CUDA_CHECK(cudaMemcpy(yacc.data(), d_Y, (std::size_t)m * k * sizeof(Acc),
                         cudaMemcpyDeviceToHost));
-  for (std::size_t i = 0; i < yacc.size(); ++i) Y[i] = static_cast<T>(yacc[i]);
+  for (std::size_t i = 0; i < yacc.size(); ++i)
+    Y[i] = static_cast<T>(yacc[i]);
 
   CUDA_CHECK(cudaEventDestroy(start));
   CUDA_CHECK(cudaEventDestroy(stop));

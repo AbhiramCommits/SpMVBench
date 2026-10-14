@@ -23,13 +23,15 @@
 //            warp per row" decomposition leaves most of the machine idle
 //            waiting on a few very long rows, so we bin work by nnz instead.
 //
-//   (4) ell_padding_overhead < 1.2
-//         -> Ell. Row lengths are nearly uniform, so padding wastes < 20%
-//            of storage and the fully-coalesced column-major layout wins.
-//
-//   (5) 4 <= mean_row_nnz < 32 && cv < 0.5
+//   (4) 4 <= mean_row_nnz < 32 && cv < 0.5
 //         -> CsrVector with lanes = next_pow2(ceil(mean_row_nnz)). Medium,
-//            uniform rows map cleanly onto a sub-warp sized vector group.
+//            uniform rows map cleanly onto a sub-warp sized vector group and
+//            avoid padding; this is checked before ELL.
+//
+//   (5) ell_padding_overhead < 1.2
+//         -> Ell. Rows are too long for a single vector group but still nearly
+//            uniform, so padding wastes < 20% of storage and the fully
+//            coalesced column-major layout wins.
 //
 //   (6) otherwise
 //         -> CsrVector with lanes = 4 (safe default for medium rows).
@@ -46,9 +48,11 @@ namespace spmvbench {
 namespace {
 
 int next_pow2(int v) {
-  if (v <= 1) return 1;
+  if (v <= 1)
+    return 1;
   int p = 1;
-  while (p < v) p <<= 1;
+  while (p < v)
+    p <<= 1;
   return p;
 }
 
@@ -56,8 +60,10 @@ std::string fmt(double v) {
   std::string s = std::to_string(v);
   // Trim trailing zeros for readability in the reason string.
   if (s.find('.') != std::string::npos) {
-    while (!s.empty() && s.back() == '0') s.pop_back();
-    if (!s.empty() && s.back() == '.') s.pop_back();
+    while (!s.empty() && s.back() == '0')
+      s.pop_back();
+    if (!s.empty() && s.back() == '.')
+      s.pop_back();
   }
   return s;
 }
@@ -66,13 +72,20 @@ std::string fmt(double v) {
 
 const char* kernel_name(KernelId id) {
   switch (id) {
-    case KernelId::CsrScalar: return "csr_scalar";
-    case KernelId::CsrVector: return "csr_vector";
-    case KernelId::CsrWarp:   return "csr_warp";
-    case KernelId::CsrMerge:  return "csr_merge";
-    case KernelId::Ell:       return "ell";
-    case KernelId::Bcsr:      return "bcsr";
-    case KernelId::Count:     break;
+    case KernelId::CsrScalar:
+      return "csr_scalar";
+    case KernelId::CsrVector:
+      return "csr_vector";
+    case KernelId::CsrWarp:
+      return "csr_warp";
+    case KernelId::CsrMerge:
+      return "csr_merge";
+    case KernelId::Ell:
+      return "ell";
+    case KernelId::Bcsr:
+      return "bcsr";
+    case KernelId::Count:
+      break;
   }
   return "unknown";
 }
@@ -84,9 +97,10 @@ KernelChoice choose_spmv(const RowStats& s) {
   if (s.nnz < 50000) {
     c.kernel = KernelId::CsrScalar;
     c.lanes = 1;
-    c.reason = "nnz=" + std::to_string(s.nnz) +
-               " < 50000: problem too small for parallel/format overhead to pay "
-               "off, use scalar";
+    c.reason =
+        "nnz=" + std::to_string(s.nnz) +
+        " < 50000: problem too small for parallel/format overhead to pay "
+        "off, use scalar";
     return c;
   }
 
@@ -119,24 +133,25 @@ KernelChoice choose_spmv(const RowStats& s) {
     return c;
   }
 
-  // (4) Low padding overhead -> ELL.
-  if (s.ell_padding_overhead < 1.2) {
-    c.kernel = KernelId::Ell;
-    c.lanes = 1;
-    c.reason = "ell_padding_overhead=" + fmt(s.ell_padding_overhead) +
-               " < 1.2: nearly uniform rows, coalesced ELL wins";
-    return c;
-  }
-
-  // (5) Medium uniform rows -> sub-warp vector group.
+  // (4) Medium uniform rows -> sub-warp vector group (checked before ELL:
+  //     a vector group covers these rows with no padding at all).
   if (s.mean_row_nnz >= 4.0 && s.mean_row_nnz < 32.0 && s.cv_row_nnz < 0.5) {
     c.kernel = KernelId::CsrVector;
     const int m = static_cast<int>(std::ceil(s.mean_row_nnz));
     c.lanes = next_pow2(m);
-    c.reason = "4 <= mean_row_nnz=" + fmt(s.mean_row_nnz) +
-               " < 32 and cv=" + fmt(s.cv_row_nnz) +
-               " < 0.5: sub-warp vector group with lanes=" +
-               std::to_string(c.lanes);
+    c.reason =
+        "4 <= mean_row_nnz=" + fmt(s.mean_row_nnz) +
+        " < 32 and cv=" + fmt(s.cv_row_nnz) +
+        " < 0.5: sub-warp vector group with lanes=" + std::to_string(c.lanes);
+    return c;
+  }
+
+  // (5) Low padding overhead -> ELL.
+  if (s.ell_padding_overhead < 1.2) {
+    c.kernel = KernelId::Ell;
+    c.lanes = 1;
+    c.reason = "ell_padding_overhead=" + fmt(s.ell_padding_overhead) +
+               " < 1.2: long but nearly uniform rows, coalesced ELL wins";
     return c;
   }
 

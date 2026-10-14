@@ -1,6 +1,6 @@
 matrix,chosen,oracle_best,chosen_ms,best_ms,hit,slowdown
-banded_100k,ell,ell,0.0644067,0.0644067,1,1
-diag_dominant_small,csr_scalar,csr_scalar,0.00590332,0.00590332,1,1
-powerlaw_skew,csr_merge,csr_merge,0.267525,0.267525,1,1
-tiny_3x3,csr_scalar,csr_scalar,1.082e-05,1.082e-05,1,1
-uniform_random,ell,csr_vector,0.288064,0.240737,0,1.19659
+banded_100k,csr_vector,csr_vector,0.0772979,0.0772979,1,1
+diag_dominant_small,csr_scalar,csr_scalar,0.00654585,0.00654585,1,1
+powerlaw_skew,csr_merge,csr_vector,0.203654,0.195015,0,1.0443
+tiny_3x3,csr_scalar,csr_scalar,6.25e-06,6.25e-06,1,1
+uniform_random,csr_vector,csr_vector,0.210929,0.210929,1,1

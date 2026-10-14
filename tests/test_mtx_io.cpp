@@ -40,9 +40,9 @@ TEST(MtxIo, OneBasedIndices) {
   const std::string path = spmvtest::write_temp("sb_one_based.mtx", body);
   auto A = read_matrix_market<double>(path);
   ASSERT_EQ(A.nnz, 1);
-  EXPECT_EQ(A.rowptr[0], 0);           // row 1 (0-based) is empty
+  EXPECT_EQ(A.rowptr[0], 0);  // row 1 (0-based) is empty
   EXPECT_EQ(A.rowptr[1], 0);
-  EXPECT_EQ(A.colind[0], 0);           // 1-based column 1 -> index 0
+  EXPECT_EQ(A.colind[0], 0);  // 1-based column 1 -> index 0
   EXPECT_DOUBLE_EQ(A.values[0], 7.5);
 }
 
@@ -55,7 +55,8 @@ TEST(MtxIo, PatternGivesUnitValues) {
   const std::string path = spmvtest::write_temp("sb_pattern.mtx", body);
   auto A = read_matrix_market<double>(path);
   ASSERT_EQ(A.nnz, 2);
-  for (std::int64_t i = 0; i < A.nnz; ++i) EXPECT_DOUBLE_EQ(A.values[i], 1.0);
+  for (std::int64_t i = 0; i < A.nnz; ++i)
+    EXPECT_DOUBLE_EQ(A.values[i], 1.0);
 }
 
 TEST(MtxIo, RejectsComplex) {

@@ -38,19 +38,20 @@ SpmvResult run_cusparse_spmv(const CsrMatrix<T>& A, const std::vector<T>& x,
 
   CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_rowptr),
                         static_cast<std::size_t>(m + 1) * sizeof(Index)));
-  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_colind),
-                        static_cast<std::size_t>(std::max<std::int64_t>(nnz, 1)) *
-                            sizeof(Index)));
-  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_values),
-                        static_cast<std::size_t>(std::max<std::int64_t>(nnz, 1)) *
-                            sizeof(T)));
+  CUDA_CHECK(
+      cudaMalloc(reinterpret_cast<void**>(&d_colind),
+                 static_cast<std::size_t>(std::max<std::int64_t>(nnz, 1)) *
+                     sizeof(Index)));
+  CUDA_CHECK(cudaMalloc(
+      reinterpret_cast<void**>(&d_values),
+      static_cast<std::size_t>(std::max<std::int64_t>(nnz, 1)) * sizeof(T)));
   CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_x),
                         static_cast<std::size_t>(std::max(n, 1)) * sizeof(T)));
   CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_y),
                         static_cast<std::size_t>(std::max(m, 1)) * sizeof(T)));
 
-  CUDA_CHECK(cudaMemcpy(d_rowptr, A.rowptr.data(),
-                        (m + 1) * sizeof(Index), cudaMemcpyHostToDevice));
+  CUDA_CHECK(cudaMemcpy(d_rowptr, A.rowptr.data(), (m + 1) * sizeof(Index),
+                        cudaMemcpyHostToDevice));
   if (nnz > 0) {
     CUDA_CHECK(cudaMemcpy(d_colind, A.colind.data(), nnz * sizeof(Index),
                           cudaMemcpyHostToDevice));
@@ -64,9 +65,9 @@ SpmvResult run_cusparse_spmv(const CsrMatrix<T>& A, const std::vector<T>& x,
   cusparseDnVecDescr_t vecX = nullptr;
   cusparseDnVecDescr_t vecY = nullptr;
   CUSPARSE_CHECK(cusparseCreate(&handle));
-  CUSPARSE_CHECK(cusparseCreateCsr(&matA, m, n, nnz, d_rowptr, d_colind, d_values,
-                                   CUSPARSE_INDEX_32I, CUSPARSE_INDEX_32I,
-                                   CUSPARSE_INDEX_BASE_ZERO, cuda_dtype<T>()));
+  CUSPARSE_CHECK(cusparseCreateCsr(
+      &matA, m, n, nnz, d_rowptr, d_colind, d_values, CUSPARSE_INDEX_32I,
+      CUSPARSE_INDEX_32I, CUSPARSE_INDEX_BASE_ZERO, cuda_dtype<T>()));
   CUSPARSE_CHECK(cusparseCreateDnVec(&vecX, n, d_x, cuda_dtype<T>()));
   CUSPARSE_CHECK(cusparseCreateDnVec(&vecY, m, d_y, cuda_dtype<T>()));
 
@@ -140,7 +141,8 @@ SpmvResult cusparse_spmv_csr_f32(const CsrMatrix<float>& A,
 
 SpmvResult cusparse_spmv_csr_f64(const CsrMatrix<double>& A,
                                  const std::vector<double>& x,
-                                 std::vector<double>& y, int iters, int warmup) {
+                                 std::vector<double>& y, int iters,
+                                 int warmup) {
   return run_cusparse_spmv<double>(A, x, y, iters, warmup);
 }
 

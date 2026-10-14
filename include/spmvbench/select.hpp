@@ -22,10 +22,10 @@ const char* kernel_name(KernelId id);
 
 struct KernelChoice {
   KernelId kernel = KernelId::CsrVector;
-  int lanes = 4;        // for CsrVector: sub-warp lanes per row
-  int block_r = 1;      // for Bcsr
-  int block_c = 1;      // for Bcsr
-  std::string reason;   // human-readable justification
+  int lanes = 4;       // for CsrVector: sub-warp lanes per row
+  int block_r = 1;     // for Bcsr
+  int block_c = 1;     // for Bcsr
+  std::string reason;  // human-readable justification
 };
 
 // Choose a SpMV kernel from row-distribution statistics using the explicit

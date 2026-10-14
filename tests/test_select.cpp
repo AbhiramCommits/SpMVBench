@@ -46,11 +46,12 @@ TEST(Select, SkewedMerge) {
 }
 
 TEST(Select, LowPaddingEll) {
+  // mean >= 32 so the vector-group rule does not apply, but padding is low.
   RowStats s;
   s.nnz = 1'000'000;
-  s.mean_row_nnz = 5.0;
+  s.mean_row_nnz = 40.0;
   s.cv_row_nnz = 0.1;
-  s.max_over_mean = 1.2;
+  s.max_over_mean = 1.1;
   s.ell_padding_overhead = 1.05;
   EXPECT_EQ(choose_spmv(s).kernel, KernelId::Ell);
 }

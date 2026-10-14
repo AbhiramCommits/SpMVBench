@@ -2,8 +2,9 @@
 
 // Matrix Market reader.
 //
-// Supported: `%%MatrixMarket matrix coordinate <real|pattern> <general|symmetric>`,
-// 1-based indices. Symmetric input is expanded to a full general matrix.
+// Supported: `%%MatrixMarket matrix coordinate <real|pattern>
+// <general|symmetric>`, 1-based indices. Symmetric input is expanded to a full
+// general matrix.
 //
 // Explicitly rejected (with a clear error): `complex` values, `array` format,
 // and any object that is not a `matrix`. Skew-symmetric is rejected too.

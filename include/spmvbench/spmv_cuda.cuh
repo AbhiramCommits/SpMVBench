@@ -27,24 +27,24 @@ namespace spmvbench {
 // ---------------------------------------------------------------------------
 // Error checking
 // ---------------------------------------------------------------------------
-#define CUDA_CHECK(expr)                                                      \
-  do {                                                                        \
-    cudaError_t _e = (expr);                                                  \
-    if (_e != cudaSuccess) {                                                  \
-      std::fprintf(stderr, "CUDA error %s:%d: %s\n", __FILE__, __LINE__,      \
-                   cudaGetErrorString(_e));                                   \
-      std::abort();                                                           \
-    }                                                                         \
+#define CUDA_CHECK(expr)                                                 \
+  do {                                                                   \
+    cudaError_t _e = (expr);                                             \
+    if (_e != cudaSuccess) {                                             \
+      std::fprintf(stderr, "CUDA error %s:%d: %s\n", __FILE__, __LINE__, \
+                   cudaGetErrorString(_e));                              \
+      std::abort();                                                      \
+    }                                                                    \
   } while (0)
 
-#define CUSPARSE_CHECK(expr)                                                  \
-  do {                                                                        \
-    cusparseStatus_t _s = (expr);                                             \
-    if (_s != CUSPARSE_STATUS_SUCCESS) {                                      \
-      std::fprintf(stderr, "cuSPARSE error %s:%d: %d\n", __FILE__, __LINE__,  \
-                   static_cast<int>(_s));                                     \
-      std::abort();                                                           \
-    }                                                                         \
+#define CUSPARSE_CHECK(expr)                                                 \
+  do {                                                                       \
+    cusparseStatus_t _s = (expr);                                            \
+    if (_s != CUSPARSE_STATUS_SUCCESS) {                                     \
+      std::fprintf(stderr, "cuSPARSE error %s:%d: %d\n", __FILE__, __LINE__, \
+                   static_cast<int>(_s));                                    \
+      std::abort();                                                          \
+    }                                                                        \
   } while (0)
 
 // ---------------------------------------------------------------------------
@@ -152,8 +152,7 @@ SpmvResult cusparse_spmv_csr_f32(const CsrMatrix<float>& A,
 
 SpmvResult cusparse_spmv_csr_f64(const CsrMatrix<double>& A,
                                  const std::vector<double>& x,
-                                 std::vector<double>& y, int iters,
-                                 int warmup);
+                                 std::vector<double>& y, int iters, int warmup);
 
 }  // namespace spmvbench
 

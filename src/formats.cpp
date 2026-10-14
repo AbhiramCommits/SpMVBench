@@ -20,7 +20,8 @@ EllMatrix<T> csr_to_ell(const CsrMatrix<T>& csr) {
 
   int max_row = 0;
   for (int i = 0; i < csr.m; ++i) {
-    max_row = std::max(max_row, static_cast<int>(csr.rowptr[i + 1] - csr.rowptr[i]));
+    max_row =
+        std::max(max_row, static_cast<int>(csr.rowptr[i + 1] - csr.rowptr[i]));
   }
   ell.max_row_nnz = max_row;
   ell.padded_nnz = static_cast<std::int64_t>(csr.m) * max_row;
@@ -60,7 +61,8 @@ BcsrMatrix<T> csr_to_bcsr(const CsrMatrix<T>& csr) {
     blocks.clear();
     for (int r = 0; r < R; ++r) {
       const int i = bi * R + r;
-      if (i >= csr.m) break;
+      if (i >= csr.m)
+        break;
       for (Index p = csr.rowptr[i]; p < csr.rowptr[i + 1]; ++p) {
         const Index col = csr.colind[p];
         const Index bj = col / C;

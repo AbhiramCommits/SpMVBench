@@ -77,7 +77,8 @@ void spmv_bcsr_cpu(const BcsrMatrix<T>& A, const T* x, Acc* y, int nthreads) {
   for (int bi = 0; bi < A.mb; ++bi) {
     // Accumulate a whole block row into a small local buffer.
     Acc acc[16];  // covers R up to 16, only R<=4 used in practice
-    for (int r = 0; r < R; ++r) acc[r] = Acc(0);
+    for (int r = 0; r < R; ++r)
+      acc[r] = Acc(0);
     for (Index bp = A.rowptr[bi]; bp < A.rowptr[bi + 1]; ++bp) {
       const Index bj = A.colind[bp];
       const T* blk = &A.values[static_cast<std::size_t>(bp) * R * C];
@@ -85,7 +86,8 @@ void spmv_bcsr_cpu(const BcsrMatrix<T>& A, const T* x, Acc* y, int nthreads) {
         Acc s = Acc(0);
         for (int c = 0; c < C; ++c) {
           const int gc = bj * C + c;  // global column
-          if (gc >= A.n) break;       // trailing partial block
+          if (gc >= A.n)
+            break;  // trailing partial block
           s += static_cast<Acc>(blk[r * C + c]) * static_cast<Acc>(x[gc]);
         }
         acc[r] += s;
@@ -93,7 +95,8 @@ void spmv_bcsr_cpu(const BcsrMatrix<T>& A, const T* x, Acc* y, int nthreads) {
     }
     for (int r = 0; r < R; ++r) {
       const int gi = bi * R + r;
-      if (gi < A.m) y[gi] = acc[r];
+      if (gi < A.m)
+        y[gi] = acc[r];
     }
   }
 }
@@ -122,18 +125,18 @@ void spmv_csr_kahan_cpu(const CsrMatrix<T>& A, const T* x, Acc* y,
 }
 
 // Explicit instantiations for the precision combinations we exercise.
-#define SPMVBENCH_INSTANTIATE_SPMV(T, Acc)                                   \
-  template void spmv_csr_cpu<T, Acc>(const CsrMatrix<T>&, const T*, Acc*,    \
-                                     int);                                   \
-  template void spmv_csr_scalar_cpu<T, Acc>(const CsrMatrix<T>&, const T*,   \
-                                            Acc*);                           \
-  template void spmv_csr_merge_cpu<T, Acc>(const CsrMatrix<T>&, const T*,    \
-                                           Acc*, int);                       \
-  template void spmv_ell_cpu<T, Acc>(const EllMatrix<T>&, const T*, Acc*,    \
-                                     int);                                   \
-  template void spmv_bcsr_cpu<T, Acc>(const BcsrMatrix<T>&, const T*, Acc*,  \
-                                      int);                                  \
-  template void spmv_csr_kahan_cpu<T, Acc>(const CsrMatrix<T>&, const T*,    \
+#define SPMVBENCH_INSTANTIATE_SPMV(T, Acc)                                  \
+  template void spmv_csr_cpu<T, Acc>(const CsrMatrix<T>&, const T*, Acc*,   \
+                                     int);                                  \
+  template void spmv_csr_scalar_cpu<T, Acc>(const CsrMatrix<T>&, const T*,  \
+                                            Acc*);                          \
+  template void spmv_csr_merge_cpu<T, Acc>(const CsrMatrix<T>&, const T*,   \
+                                           Acc*, int);                      \
+  template void spmv_ell_cpu<T, Acc>(const EllMatrix<T>&, const T*, Acc*,   \
+                                     int);                                  \
+  template void spmv_bcsr_cpu<T, Acc>(const BcsrMatrix<T>&, const T*, Acc*, \
+                                      int);                                 \
+  template void spmv_csr_kahan_cpu<T, Acc>(const CsrMatrix<T>&, const T*,   \
                                            Acc*, int);
 
 SPMVBENCH_INSTANTIATE_SPMV(float, float)

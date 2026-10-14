@@ -52,8 +52,10 @@ TEST(Formats, EllPreservesValuesAndSpMV) {
   EXPECT_TRUE(spmvtest::approx_eq(y, ref));
 
   double sum_csr = 0.0, sum_ell = 0.0;
-  for (double v : A.values) sum_csr += v;
-  for (double v : ell.values) sum_ell += v;  // padding adds zeros
+  for (double v : A.values)
+    sum_csr += v;
+  for (double v : ell.values)
+    sum_ell += v;  // padding adds zeros
   EXPECT_DOUBLE_EQ(sum_csr, sum_ell);
 }
 

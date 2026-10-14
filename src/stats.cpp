@@ -37,8 +37,10 @@ RowStats compute_row_stats(const Index* rowptr, const Index* colind, int m,
     const int r = static_cast<int>(rowptr[i + 1] - rowptr[i]);
     row_nnz[i] = r;
     sum += r;
-    if (i == 0 || r < mn) mn = r;
-    if (i == 0 || r > mx) mx = r;
+    if (i == 0 || r < mn)
+      mn = r;
+    if (i == 0 || r > mx)
+      mx = r;
   }
   s.min_row_nnz = mn;
   s.max_row_nnz = mx;
@@ -61,20 +63,17 @@ RowStats compute_row_stats(const Index* rowptr, const Index* colind, int m,
   }
   var /= m;
   s.stddev_row_nnz = std::sqrt(var);
-  s.cv_row_nnz =
-      (s.mean_row_nnz > 0) ? s.stddev_row_nnz / s.mean_row_nnz : 0.0;
-  s.max_over_mean =
-      (s.mean_row_nnz > 0) ? s.max_row_nnz / s.mean_row_nnz : 0.0;
+  s.cv_row_nnz = (s.mean_row_nnz > 0) ? s.stddev_row_nnz / s.mean_row_nnz : 0.0;
+  s.max_over_mean = (s.mean_row_nnz > 0) ? s.max_row_nnz / s.mean_row_nnz : 0.0;
 
   // Histogram.
   s.row_nnz_histogram.assign(static_cast<std::size_t>(mx) + 1, 0);
-  for (int i = 0; i < m; ++i) s.row_nnz_histogram[row_nnz[i]]++;
+  for (int i = 0; i < m; ++i)
+    s.row_nnz_histogram[row_nnz[i]]++;
 
   // ELL padding overhead with natural max-length padding.
   s.ell_padding_overhead =
-      (nnz > 0)
-          ? static_cast<double>(m) * mx / static_cast<double>(nnz)
-          : 1.0;
+      (nnz > 0) ? static_cast<double>(m) * mx / static_cast<double>(nnz) : 1.0;
 
   // Fraction of *all possible* 4x4 blocks that are > 50% populated.
   {
@@ -90,7 +89,8 @@ RowStats compute_row_stats(const Index* rowptr, const Index* colind, int m,
         counts.clear();
         for (int r = 0; r < R; ++r) {
           const int i = bi * R + r;
-          if (i >= m) break;
+          if (i >= m)
+            break;
           for (Index p = rowptr[i]; p < rowptr[i + 1]; ++p) {
             const Index bj = colind[p] / C;
             int idx = -1;
@@ -109,7 +109,8 @@ RowStats compute_row_stats(const Index* rowptr, const Index* colind, int m,
           }
         }
         for (int c : counts) {
-          if (c > (R * C) / 2) dense_blocks++;
+          if (c > (R * C) / 2)
+            dense_blocks++;
         }
       }
     }

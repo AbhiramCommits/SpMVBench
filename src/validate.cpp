@@ -42,16 +42,22 @@ std::map<std::string, std::string> read_flat_json(const std::string& path) {
   std::string line;
   while (std::getline(in, line)) {
     const auto q1 = line.find('"');
-    if (q1 == std::string::npos) continue;
+    if (q1 == std::string::npos)
+      continue;
     const auto q2 = line.find('"', q1 + 1);
-    if (q2 == std::string::npos) continue;
+    if (q2 == std::string::npos)
+      continue;
     const std::string key = line.substr(q1 + 1, q2 - q1 - 1);
     const auto colon = line.find(':', q2);
-    if (colon == std::string::npos) continue;
+    if (colon == std::string::npos)
+      continue;
     std::string val = line.substr(colon + 1);
     // trim whitespace and trailing comma
-    while (!val.empty() && (val.front() == ' ' || val.front() == '\t')) val.erase(val.begin());
-    while (!val.empty() && (val.back() == ',' || val.back() == '\r' || val.back() == ' ')) val.pop_back();
+    while (!val.empty() && (val.front() == ' ' || val.front() == '\t'))
+      val.erase(val.begin());
+    while (!val.empty() &&
+           (val.back() == ',' || val.back() == '\r' || val.back() == ' '))
+      val.pop_back();
     if (val.size() >= 2 && val.front() == '"' && val.back() == '"')
       val = val.substr(1, val.size() - 2);
     kv[key] = val;
@@ -61,7 +67,8 @@ std::map<std::string, std::string> read_flat_json(const std::string& path) {
 
 std::vector<double> read_f64_bin(const std::string& path) {
   std::ifstream in(path, std::ios::binary | std::ios::ate);
-  if (!in) throw std::runtime_error("cannot open " + path);
+  if (!in)
+    throw std::runtime_error("cannot open " + path);
   const std::streamsize bytes = in.tellg();
   in.seekg(0);
   std::vector<double> out(static_cast<std::size_t>(bytes / sizeof(double)));
@@ -92,7 +99,8 @@ struct ErrStats {
 ErrStats compare(const std::vector<double>& yhat,
                  const std::vector<double>& ref) {
   ErrStats e;
-  if (yhat.size() != ref.size()) throw std::runtime_error("size mismatch");
+  if (yhat.size() != ref.size())
+    throw std::runtime_error("size mismatch");
   double num = 0.0, den = 0.0;
   for (std::size_t i = 0; i < ref.size(); ++i) {
     const double d = std::fabs(yhat[i] - ref[i]);
@@ -116,12 +124,14 @@ CsrMatrix<T> cast_csr(const CsrMatrix<double>& A) {
   B.colind = A.colind;
   B.values.resize(static_cast<std::size_t>(A.nnz));
   for (std::int64_t i = 0; i < A.nnz; ++i)
-    B.values[static_cast<std::size_t>(i)] = static_cast<T>(A.values[static_cast<std::size_t>(i)]);
+    B.values[static_cast<std::size_t>(i)] =
+        static_cast<T>(A.values[static_cast<std::size_t>(i)]);
   return B;
 }
 
-void emit(std::ofstream& csv, const std::string& name, const std::string& kernel,
-          const std::string& mode, const ErrStats& e) {
+void emit(std::ofstream& csv, const std::string& name,
+          const std::string& kernel, const std::string& mode,
+          const ErrStats& e) {
   std::ostringstream os;
   os << name << "," << kernel << "," << mode << "," << e.max_rel << ","
      << e.l2_rel << "," << e.max_abs << "\n";
@@ -137,7 +147,8 @@ void validate_type(const std::string& name, const CsrMatrix<double>& Ad,
 
   auto to_double = [](const std::vector<Acc>& v) {
     std::vector<double> d(v.size());
-    for (std::size_t i = 0; i < v.size(); ++i) d[i] = static_cast<double>(v[i]);
+    for (std::size_t i = 0; i < v.size(); ++i)
+      d[i] = static_cast<double>(v[i]);
     return d;
   };
 
@@ -224,9 +235,11 @@ int run_validation(const ValidationOptions& opts) {
       spmv_csr_cpu<double, double>(A, x.data(), y.data());
       const ErrStats e = compare(y, ref.y);
       total++;
-      if (e.max_rel < 1e-12) worst_ok++;
-      std::printf("[validate] %-24s fp64 csr max_rel=%.3e l2_rel=%.3e max_abs=%.3e\n",
-                  name.c_str(), e.max_rel, e.l2_rel, e.max_abs);
+      if (e.max_rel < 1e-12)
+        worst_ok++;
+      std::printf(
+          "[validate] %-24s fp64 csr max_rel=%.3e l2_rel=%.3e max_abs=%.3e\n",
+          name.c_str(), e.max_rel, e.l2_rel, e.max_abs);
     }
   }
 

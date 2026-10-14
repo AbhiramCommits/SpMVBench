@@ -35,12 +35,16 @@ SpmmResult run_cusparse_spmm(const CsrMatrix<T>& A, const std::vector<T>& B,
 
   CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_rowptr),
                         (std::size_t)(m + 1) * sizeof(Index)));
-  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_colind),
-                        (std::size_t)std::max<std::int64_t>(A.nnz, 1) * sizeof(Index)));
-  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_values),
-                        (std::size_t)std::max<std::int64_t>(A.nnz, 1) * sizeof(T)));
-  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_B), (std::size_t)n * k * sizeof(T)));
-  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_C), (std::size_t)m * k * sizeof(T)));
+  CUDA_CHECK(cudaMalloc(
+      reinterpret_cast<void**>(&d_colind),
+      (std::size_t)std::max<std::int64_t>(A.nnz, 1) * sizeof(Index)));
+  CUDA_CHECK(
+      cudaMalloc(reinterpret_cast<void**>(&d_values),
+                 (std::size_t)std::max<std::int64_t>(A.nnz, 1) * sizeof(T)));
+  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_B),
+                        (std::size_t)n * k * sizeof(T)));
+  CUDA_CHECK(cudaMalloc(reinterpret_cast<void**>(&d_C),
+                        (std::size_t)m * k * sizeof(T)));
 
   CUDA_CHECK(cudaMemcpy(d_rowptr, A.rowptr.data(), (m + 1) * sizeof(Index),
                         cudaMemcpyHostToDevice));
@@ -58,10 +62,9 @@ SpmmResult run_cusparse_spmm(const CsrMatrix<T>& A, const std::vector<T>& B,
   cusparseDnMatDescr_t matB = nullptr;
   cusparseDnMatDescr_t matC = nullptr;
   CUSPARSE_CHECK(cusparseCreate(&handle));
-  CUSPARSE_CHECK(cusparseCreateCsr(&matA, m, n, A.nnz, d_rowptr, d_colind,
-                                   d_values, CUSPARSE_INDEX_32I,
-                                   CUSPARSE_INDEX_32I, CUSPARSE_INDEX_BASE_ZERO,
-                                   cuda_dtype<T>()));
+  CUSPARSE_CHECK(cusparseCreateCsr(
+      &matA, m, n, A.nnz, d_rowptr, d_colind, d_values, CUSPARSE_INDEX_32I,
+      CUSPARSE_INDEX_32I, CUSPARSE_INDEX_BASE_ZERO, cuda_dtype<T>()));
   CUSPARSE_CHECK(cusparseCreateDnMat(&matB, n, k, k, d_B, cuda_dtype<T>(),
                                      CUSPARSE_ORDER_ROW));
   CUSPARSE_CHECK(cusparseCreateDnMat(&matC, m, k, k, d_C, cuda_dtype<T>(),
@@ -73,9 +76,11 @@ SpmmResult run_cusparse_spmm(const CsrMatrix<T>& A, const std::vector<T>& B,
 
   std::size_t buffer_size = 0;
   CUSPARSE_CHECK(cusparseSpMM_bufferSize(
-      handle, CUSPARSE_OPERATION_NON_TRANSPOSE, CUSPARSE_OPERATION_NON_TRANSPOSE,
-      &alpha, matA, matB, &beta, matC, cuda_dtype<T>(), alg, &buffer_size));
-  if (buffer_size > 0) CUDA_CHECK(cudaMalloc(&d_buffer, buffer_size));
+      handle, CUSPARSE_OPERATION_NON_TRANSPOSE,
+      CUSPARSE_OPERATION_NON_TRANSPOSE, &alpha, matA, matB, &beta, matC,
+      cuda_dtype<T>(), alg, &buffer_size));
+  if (buffer_size > 0)
+    CUDA_CHECK(cudaMalloc(&d_buffer, buffer_size));
 
   for (int i = 0; i < warmup; ++i) {
     CUSPARSE_CHECK(cusparseSpMM(handle, CUSPARSE_OPERATION_NON_TRANSPOSE,

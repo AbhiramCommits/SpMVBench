@@ -17,17 +17,18 @@ template <typename T>
 struct EllMatrix {
   using value_type = T;
 
-  int m = 0;                 // rows
-  int n = 0;                 // columns
-  int max_row_nnz = 0;       // padded columns per row
-  std::int64_t nnz = 0;      // original (unpadded) nonzeros
+  int m = 0;                    // rows
+  int n = 0;                    // columns
+  int max_row_nnz = 0;          // padded columns per row
+  std::int64_t nnz = 0;         // original (unpadded) nonzeros
   std::int64_t padded_nnz = 0;  // m * max_row_nnz
   std::vector<Index> colind;    // size padded_nnz, column-major
   std::vector<T> values;        // size padded_nnz, column-major
 
   // Padding overhead ratio: how many more entries we store than we need.
   double padding_overhead() const {
-    if (nnz == 0) return 1.0;
+    if (nnz == 0)
+      return 1.0;
     return static_cast<double>(padded_nnz) / static_cast<double>(nnz);
   }
 };

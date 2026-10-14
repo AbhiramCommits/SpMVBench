@@ -1,7 +1,8 @@
 // Matrix Market reader implementation.
 //
-// Handles:  %%MatrixMarket matrix coordinate <real|integer|pattern> <general|symmetric>
-// Rejects:  complex values, array format, non-matrix objects, skew-symmetric.
+// Handles:  %%MatrixMarket matrix coordinate <real|integer|pattern>
+// <general|symmetric> Rejects:  complex values, array format, non-matrix
+// objects, skew-symmetric.
 
 #include "spmvbench/mtx_io.hpp"
 
@@ -38,10 +39,12 @@ std::runtime_error mm_error(const std::string& path, const std::string& msg) {
 template <typename T>
 CsrMatrix<T> read_matrix_market(const std::string& path) {
   std::ifstream in(path);
-  if (!in) throw mm_error(path, "cannot open file");
+  if (!in)
+    throw mm_error(path, "cannot open file");
 
   std::string line;
-  if (!std::getline(in, line)) throw mm_error(path, "empty file");
+  if (!std::getline(in, line))
+    throw mm_error(path, "empty file");
 
   // --- Banner -------------------------------------------------------------
   bool pattern = false;
@@ -53,13 +56,14 @@ CsrMatrix<T> read_matrix_market(const std::string& path) {
     if (lower(banner) != "%%matrixmarket")
       throw mm_error(path, "missing %%MatrixMarket banner");
     if (lower(object) != "matrix")
-      throw mm_error(path,
-                     "only 'matrix' objects are supported, got '" + object + "'");
+      throw mm_error(
+          path, "only 'matrix' objects are supported, got '" + object + "'");
     if (lower(format) != "coordinate")
-      throw mm_error(path, "only 'coordinate' format is supported, got '" +
-                               format + "'");
+      throw mm_error(
+          path, "only 'coordinate' format is supported, got '" + format + "'");
     const std::string f = lower(field);
-    if (f == "complex") throw mm_error(path, "complex matrices are not supported");
+    if (f == "complex")
+      throw mm_error(path, "complex matrices are not supported");
     if (f != "real" && f != "integer" && f != "pattern")
       throw mm_error(path, "unsupported field type '" + field + "'");
     const std::string sym = lower(symmetry);
@@ -75,14 +79,16 @@ CsrMatrix<T> read_matrix_market(const std::string& path) {
   long long rows = 0, cols = 0, entries = 0;
   bool got_size = false;
   while (std::getline(in, line)) {
-    if (line.empty() || line[0] == '%') continue;
+    if (line.empty() || line[0] == '%')
+      continue;
     std::istringstream ss(line);
     if (!(ss >> rows >> cols >> entries))
       throw mm_error(path, "malformed size line: '" + line + "'");
     got_size = true;
     break;
   }
-  if (!got_size) throw mm_error(path, "missing size line");
+  if (!got_size)
+    throw mm_error(path, "missing size line");
   if (rows < 0 || cols < 0 || entries < 0)
     throw mm_error(path, "negative dimensions in size line");
   if (rows > 2147483647LL || cols > 2147483647LL)
@@ -94,7 +100,8 @@ CsrMatrix<T> read_matrix_market(const std::string& path) {
 
   long long count = 0;
   while (count < entries && std::getline(in, line)) {
-    if (line.empty() || line[0] == '%') continue;
+    if (line.empty() || line[0] == '%')
+      continue;
     std::istringstream ss(line);
     long long i, j;
     double v = 1.0;
@@ -128,7 +135,8 @@ CsrMatrix<T> read_matrix_market(const std::string& path) {
     return csr;
   }
 
-  for (const auto& t : tris) csr.rowptr[t.i + 1]++;
+  for (const auto& t : tris)
+    csr.rowptr[t.i + 1]++;
 
   std::vector<Index> cursor(csr.m);
   for (int i = 0; i < csr.m; ++i) {
@@ -146,10 +154,12 @@ CsrMatrix<T> read_matrix_market(const std::string& path) {
   for (int i = 0; i < csr.m; ++i) {
     const Index s = csr.rowptr[i];
     const Index e = csr.rowptr[i + 1];
-    if (e - s <= 1) continue;
+    if (e - s <= 1)
+      continue;
     row.clear();
     row.reserve(e - s);
-    for (Index p = s; p < e; ++p) row.emplace_back(csr.colind[p], csr.values[p]);
+    for (Index p = s; p < e; ++p)
+      row.emplace_back(csr.colind[p], csr.values[p]);
     std::sort(row.begin(), row.end(),
               [](const auto& a, const auto& b) { return a.first < b.first; });
     for (Index p = s; p < e; ++p) {

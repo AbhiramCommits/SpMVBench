@@ -27,8 +27,10 @@ constexpr bool is_value_type_v =
 template <typename U>
 constexpr const char* dtype_name() {
   static_assert(is_value_type_v<U>, "unsupported value type");
-  if constexpr (std::is_same_v<U, float>) return "fp32";
-  if constexpr (std::is_same_v<U, double>) return "fp64";
+  if constexpr (std::is_same_v<U, float>)
+    return "fp32";
+  if constexpr (std::is_same_v<U, double>)
+    return "fp64";
   return "unknown";
 }
 

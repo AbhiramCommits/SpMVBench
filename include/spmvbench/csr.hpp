@@ -17,9 +17,9 @@ template <typename T>
 struct CsrMatrix {
   using value_type = T;
 
-  int m = 0;               // number of rows
-  int n = 0;               // number of columns
-  std::int64_t nnz = 0;    // number of stored nonzeros
+  int m = 0;                  // number of rows
+  int n = 0;                  // number of columns
+  std::int64_t nnz = 0;       // number of stored nonzeros
   std::vector<Index> rowptr;  // size m + 1
   std::vector<Index> colind;  // size nnz
   std::vector<T> values;      // size nnz

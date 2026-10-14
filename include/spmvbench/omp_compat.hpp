@@ -6,9 +6,10 @@
 #if defined(_OPENMP)
 #include <omp.h>
 #define SPMVBENCH_HAS_OPENMP 1
-#define SPMVBENCH_SET_THREADS(n)      \
-  do {                                \
-    if ((n) > 0) omp_set_num_threads((n)); \
+#define SPMVBENCH_SET_THREADS(n) \
+  do {                           \
+    if ((n) > 0)                 \
+      omp_set_num_threads((n));  \
   } while (0)
 #else
 #define SPMVBENCH_HAS_OPENMP 0

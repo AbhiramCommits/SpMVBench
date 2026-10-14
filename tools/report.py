@@ -20,6 +20,9 @@ ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 RESULTS = os.path.join(ROOT, "results")
 
 SPMV_KERNELS = {"csr_scalar", "csr_vector", "csr_merge", "ell", "bcsr"}
+# The 3x3 matrix is a correctness fixture; its times are below useful timer
+# resolution, so it is excluded from the performance headline.
+SKIP_MATRICES = {"tiny_3x3"}
 
 
 def read_csv(path):
@@ -48,31 +51,37 @@ def build_summary():
 
     # ---- headline: best SpMV kernel per matrix x precision ------------------
     lines.append("## Headline: best kernel per matrix and precision\n")
-    lines.append("Speedup is measured against the single-threaded CPU "
-                 "`csr_scalar` baseline (no GPU on this machine).\n")
-    lines.append("| matrix | prec | best kernel | mean ms | GFLOP/s | BW lo GB/s "
-                 "| BW hi GB/s | speedup |")
-    lines.append("|--------|------|-------------|--------:|--------:|-----------:"
-                 "|-----------:|--------:|")
+    lines.append("Speedup and all throughput numbers use the minimum time over "
+                 "iterations (best case), measured against the single-threaded "
+                 "CPU `csr_scalar` baseline (no GPU on this machine).\n")
+    lines.append("| matrix | prec | best kernel | min ms | mean ms | GFLOP/s | "
+                 "BW lo GB/s | BW hi GB/s | speedup |")
+    lines.append("|--------|------|-------------|-------:|--------:|--------:|"
+                 "-----------:|-----------:|--------:|")
+    # Select the best kernel by the minimum (least noisy) time; display the mean.
     best_rows = {}
     for r in bench:
-        if r["kernel"] not in SPMV_KERNELS:
+        if r["kernel"] not in SPMV_KERNELS or r["matrix"] in SKIP_MATRICES:
             continue
         key = (r["matrix"], r["precision"])
         cur = best_rows.get(key)
-        if cur is None or float(r["mean_ms"]) < float(cur["mean_ms"]):
+        if cur is None or float(r["min_ms"]) < float(cur["min_ms"]):
             best_rows[key] = r
     for key in sorted(best_rows):
         r = best_rows[key]
         lines.append(
             f"| {r['matrix']} | {r['precision']} | {r['kernel']} | "
-            f"{fmt(r['mean_ms'])} | {fmt(r['gflops'],4)} | {fmt(r['bw_lo_gbs'],4)} | "
+            f"{fmt(r['min_ms'],4)} | {fmt(r['mean_ms'],4)} | "
+            f"{fmt(r['gflops'],4)} | {fmt(r['bw_lo_gbs'],4)} | "
             f"{fmt(r['bw_hi_gbs'],4)} | {fmt(r['speedup_vs_st'],3)}x |"
         )
 
     # ---- speedup extremes ---------------------------------------------------
     if bench:
-        ranked = sorted(bench, key=lambda r: float(r["speedup_vs_st"]), reverse=True)
+        ranked = sorted(
+            (r for r in bench
+             if float(r["speedup_vs_st"]) > 0.0 and r["matrix"] not in SKIP_MATRICES),
+            key=lambda r: float(r["speedup_vs_st"]), reverse=True)
         lines.append("\n## Speedup vs single-thread baseline - extremes\n")
         lines.append("| matrix | prec | kernel | speedup |")
         lines.append("|--------|------|--------|--------:|")

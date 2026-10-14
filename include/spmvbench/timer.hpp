@@ -9,8 +9,12 @@ namespace spmvbench {
 
 class CpuTimer {
  public:
-  void start() { t0_ = clock::now(); }
-  void stop() { t1_ = clock::now(); }
+  void start() {
+    t0_ = clock::now();
+  }
+  void stop() {
+    t1_ = clock::now();
+  }
 
   // Elapsed milliseconds between the last start() and stop().
   double ms() const {
