@@ -1,0 +1,10 @@
+Nsight Compute (ncu) is not installed on this machine.
+A CUDA-capable NVIDIA GPU is also absent, so the GPU kernels could
+not be profiled (they are source-complete but gated behind
+SPMVBENCH_ENABLE_CUDA and were not compiled or run here).
+
+Diagnostics:
+  $ nvcc --version
+    scripts/profile.sh: line 23: nvcc: command not found
+  $ nvidia-smi
+    scripts/profile.sh: line 25: nvidia-smi: command not found

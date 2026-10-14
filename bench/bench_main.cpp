@@ -309,6 +309,203 @@ int cmd_auto(const std::vector<std::string>& args) {
   return 0;
 }
 
+// ---------------------------------------------------------------------------
+// Benchmark harness
+// ---------------------------------------------------------------------------
+struct TimeStat {
+  double mean = 0.0, min = 0.0, max = 0.0;
+};
+
+template <typename F>
+TimeStat time_loop(F&& fn, int iters, int warmup) {
+  for (int i = 0; i < warmup; ++i) fn();
+  spmvbench::CpuTimer t;
+  TimeStat s;
+  s.min = 1e300;
+  double sum = 0.0;
+  for (int i = 0; i < iters; ++i) {
+    t.start();
+    fn();
+    t.stop();
+    const double ms = t.ms();
+    sum += ms;
+    s.min = std::min(s.min, ms);
+    s.max = std::max(s.max, ms);
+  }
+  s.mean = sum / std::max(1, iters);
+  return s;
+}
+
+struct BenchRow {
+  std::string matrix, precision, kernel;
+  double mean_ms = 0, min_ms = 0, max_ms = 0;
+  double gflops = 0;
+  double bw_lo = 0, bw_hi = 0;  // GB/s, compulsory / no-reuse
+  double speedup = 0;           // vs single-thread CPU baseline
+};
+
+double gbs(double bytes, double ms) {
+  return ms > 0 ? bytes / (ms * 1e-3) / 1e9 : 0.0;
+}
+
+template <typename T, typename Acc>
+std::vector<BenchRow> bench_type(const std::string& name,
+                                 const spmvbench::CsrMatrix<T>& A,
+                                 const std::vector<T>& x, int iters, int warmup,
+                                 const std::string& prec) {
+  const std::int64_t nnz = A.nnz;
+  const int m = A.m, n = A.n;
+  std::vector<Acc> y(static_cast<std::size_t>(m));
+  std::vector<BenchRow> rows;
+  const double xbytes = sizeof(T);
+
+  auto add = [&](const std::string& kernel, const TimeStat& s, double flops,
+                 double bytes_lo, double bytes_hi) {
+    BenchRow r;
+    r.matrix = name;
+    r.precision = prec;
+    r.kernel = kernel;
+    r.mean_ms = s.mean;
+    r.min_ms = s.min;
+    r.max_ms = s.max;
+    r.gflops = s.mean > 0 ? flops / (s.mean * 1e-3) / 1e9 : 0.0;
+    r.bw_lo = gbs(bytes_lo, s.mean);
+    r.bw_hi = gbs(bytes_hi, s.mean);
+    rows.push_back(r);
+  };
+
+  // Compulsory/noreuse byte models for CSR.
+  const double csr_v = static_cast<double>(nnz) * sizeof(T);
+  const double csr_c = static_cast<double>(nnz) * sizeof(Index);
+  const double csr_r = static_cast<double>(m + 1) * sizeof(Index);
+  const double csr_lo = csr_v + csr_c + csr_r + n * xbytes + m * sizeof(Acc);
+  const double csr_hi = csr_v + csr_c + csr_r + nnz * xbytes + m * sizeof(Acc);
+
+  // Baseline: single-threaded scalar CSR.
+  const TimeStat base = time_loop(
+      [&] { spmvbench::spmv_csr_scalar_cpu<T, Acc>(A, x.data(), y.data()); },
+      iters, warmup);
+  add("csr_scalar", base, 2.0 * nnz, csr_lo, csr_hi);
+
+  const TimeStat vec = time_loop(
+      [&] { spmvbench::spmv_csr_cpu<T, Acc>(A, x.data(), y.data()); }, iters,
+      warmup);
+  add("csr_vector", vec, 2.0 * nnz, csr_lo, csr_hi);
+
+  const TimeStat mer = time_loop(
+      [&] { spmvbench::spmv_csr_merge_cpu<T, Acc>(A, x.data(), y.data()); },
+      iters, warmup);
+  add("csr_merge", mer, 2.0 * nnz, csr_lo, csr_hi);
+
+  {
+    const auto ell = spmvbench::csr_to_ell(A);
+    const double pn = static_cast<double>(ell.padded_nnz);
+    const double v = pn * sizeof(T), c = pn * sizeof(Index);
+    const double lo = v + c + n * xbytes + m * sizeof(Acc);
+    const double hi = v + c + pn * xbytes + m * sizeof(Acc);
+    const TimeStat s = time_loop(
+        [&] { spmvbench::spmv_ell_cpu<T, Acc>(ell, x.data(), y.data()); }, iters,
+        warmup);
+    add("ell", s, 2.0 * nnz, lo, hi);
+  }
+  {
+    const auto b = spmvbench::csr_to_bcsr<T, 4, 4>(A);
+    const double bn = static_cast<double>(b.block_nnz);
+    const double v = bn * 16 * sizeof(T), c = bn * sizeof(Index);
+    const double r = static_cast<double>(b.mb + 1) * sizeof(Index);
+    const double lo = v + c + r + n * xbytes + m * sizeof(Acc);
+    const double hi = v + c + r + bn * 16 * xbytes + m * sizeof(Acc);
+    const TimeStat s = time_loop(
+        [&] { spmvbench::spmv_bcsr_cpu<T, Acc>(b, x.data(), y.data()); }, iters,
+        warmup);
+    add("bcsr", s, 2.0 * nnz, lo, hi);
+  }
+  // SpMM with k = 32.
+  {
+    const int k = 32;
+    std::mt19937 rng(2024);
+    std::uniform_real_distribution<double> d(-1.0, 1.0);
+    std::vector<T> B(static_cast<std::size_t>(n) * k);
+    for (auto& v : B) v = static_cast<T>(d(rng));
+    std::vector<Acc> Y(static_cast<std::size_t>(m) * k);
+    const double bbytes = static_cast<double>(n) * k * sizeof(T);
+    const double ybytes = static_cast<double>(m) * k * sizeof(Acc);
+    const double lo = csr_v + csr_c + csr_r + bbytes + ybytes;
+    const double hi = csr_v + csr_c + csr_r +
+                      static_cast<double>(nnz) * k * xbytes + ybytes;
+    const TimeStat s = time_loop(
+        [&] { spmvbench::spmm_csr_cpu<T, Acc>(A, B.data(), Y.data(), k); }, iters,
+        warmup);
+    add("spmm_csr_k32", s, 2.0 * nnz * k, lo, hi);
+  }
+
+  // Speedup vs the single-thread baseline.
+  for (auto& r : rows) r.speedup = r.mean_ms > 0 ? base.mean / r.mean_ms : 0.0;
+  return rows;
+}
+
+int cmd_bench(const std::vector<std::string>& args) {
+  int iters = 50, warmup = 5;
+  std::string only;
+  for (std::size_t i = 0; i < args.size(); ++i) {
+    if (args[i] == "--iters" && i + 1 < args.size()) iters = std::stoi(args[++i]);
+    else if (args[i] == "--warmup" && i + 1 < args.size()) warmup = std::stoi(args[++i]);
+    else only = args[i];
+  }
+
+  std::vector<std::string> targets = list_matrices();
+  if (!only.empty()) targets = {only};
+  if (targets.empty()) {
+    std::fprintf(stderr, "no matrices found in %s\n", data_dir().c_str());
+    return 1;
+  }
+
+  std::vector<BenchRow> all;
+  for (const auto& p : targets) {
+    const std::string name = base_name(p);
+    std::fprintf(stderr, "[bench] %s ...\n", name.c_str());
+    spmvbench::CsrMatrix<double> Ad = spmvbench::read_matrix_market<double>(p);
+    const std::vector<double> xd = make_x_deterministic(Ad.n, 999u);
+
+    // fp64
+    for (auto& r : bench_type<double, double>(name, Ad, xd, iters, warmup, "fp64"))
+      all.push_back(r);
+    // fp32
+    spmvbench::CsrMatrix<float> Af = spmvbench::read_matrix_market<float>(p);
+    std::vector<float> xf(xd.begin(), xd.end());
+    for (auto& r : bench_type<float, float>(name, Af, xf, iters, warmup, "fp32"))
+      all.push_back(r);
+  }
+
+  fs::create_directories("results");
+  std::ofstream csv("results/bench.csv");
+  csv << "matrix,precision,kernel,mean_ms,min_ms,max_ms,gflops,bw_lo_gbs,"
+         "bw_hi_gbs,speedup_vs_st\n";
+  for (const auto& r : all) {
+    csv << r.matrix << "," << r.precision << "," << r.kernel << "," << r.mean_ms
+        << "," << r.min_ms << "," << r.max_ms << "," << r.gflops << ","
+        << r.bw_lo << "," << r.bw_hi << "," << r.speedup << "\n";
+  }
+
+  std::ofstream md("results/bench.md");
+  md << "# SpMVBench benchmark results\n\n"
+     << "Baseline for speedup is the single-threaded CPU `csr_scalar` kernel "
+        "(no GPU on this machine).\n\n"
+     << "| matrix | prec | kernel | mean ms | min ms | GFLOP/s | BW lo GB/s | "
+        "BW hi GB/s | speedup |\n"
+     << "|--------|------|--------|--------:|-------:|--------:|-----------:|"
+        "----------:|--------:|\n";
+  for (const auto& r : all) {
+    md << "| " << r.matrix << " | " << r.precision << " | " << r.kernel << " | "
+       << r.mean_ms << " | " << r.min_ms << " | " << r.gflops << " | " << r.bw_lo
+       << " | " << r.bw_hi << " | " << r.speedup << " |\n";
+  }
+
+  std::printf("[bench] wrote results/bench.csv (%zu rows) and results/bench.md\n",
+              all.size());
+  return 0;
+}
+
 }  // namespace
 
 int main(int argc, char** argv) {
@@ -330,10 +527,7 @@ int main(int argc, char** argv) {
     opts.ref_dir = data_dir() + "/ref";
     return spmvbench::run_validation(opts);
   }
-  if (cmd == "--bench") {
-    std::fprintf(stderr, "--bench is not available yet in this build\n");
-    return 2;
-  }
+  if (cmd == "--bench") return cmd_bench(args);
 
   std::fprintf(stderr, "unknown command '%s'\n\n", cmd.c_str());
   print_help(argv[0]);
