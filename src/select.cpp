@@ -3,6 +3,11 @@
 // The rules below are deliberately explicit and ordered. The first matching
 // rule wins; the order encodes the relative importance of the signals:
 //
+//   (0) nnz < 50000
+//         -> CsrScalar. The problem is so small that block/thread orchestration
+//            and format padding dominate the actual arithmetic; a plain scalar
+//            sweep is fastest (and this is true on both CPU and GPU).
+//
 //   (1) mean_row_nnz < 4
 //         -> CsrScalar. Rows are so short that per-row orchestration (a warp
 //            or vector group per row) is pure overhead; one thread per row
@@ -74,6 +79,16 @@ const char* kernel_name(KernelId id) {
 
 KernelChoice choose_spmv(const RowStats& s) {
   KernelChoice c;
+
+  // (0) Tiny problems: orchestration dominates.
+  if (s.nnz < 50000) {
+    c.kernel = KernelId::CsrScalar;
+    c.lanes = 1;
+    c.reason = "nnz=" + std::to_string(s.nnz) +
+               " < 50000: problem too small for parallel/format overhead to pay "
+               "off, use scalar";
+    return c;
+  }
 
   // (1) Very short rows.
   if (s.mean_row_nnz < 4.0) {
