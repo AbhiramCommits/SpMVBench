@@ -202,9 +202,15 @@ GpuInfo query_gpu() {
   g.major = prop.major;
   g.minor = prop.minor;
   // Theoretical HBM/GDDR peak: double data rate * clock * bus width in bytes.
-  if (prop.memoryClockRate > 0 && prop.memoryBusWidth > 0) {
-    g.peak_gbs = 2.0 * static_cast<double>(prop.memoryClockRate) * 1e3 *
-                 (static_cast<double>(prop.memoryBusWidth) / 8.0) / 1e9;
+  // CUDA 13 removed memoryClockRate/memoryBusWidth from cudaDeviceProp, so
+  // query the equivalent device attributes instead.
+  int mem_clock_khz = 0;
+  int bus_width_bits = 0;
+  cudaDeviceGetAttribute(&mem_clock_khz, cudaDevAttrMemoryClockRate, dev);
+  cudaDeviceGetAttribute(&bus_width_bits, cudaDevAttrMemoryBusWidth, dev);
+  if (mem_clock_khz > 0 && bus_width_bits > 0) {
+    g.peak_gbs = 2.0 * static_cast<double>(mem_clock_khz) * 1e3 *
+                 (static_cast<double>(bus_width_bits) / 8.0) / 1e9;
     g.peak_known = true;
   }
   return g;
