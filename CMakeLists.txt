@@ -146,6 +146,13 @@ target_link_libraries(spmvbench_core PUBLIC spmvbench_omp)
 if(SPMVBENCH_BUILD_BENCH)
   add_executable(bench bench/bench_main.cpp)
   target_link_libraries(bench PRIVATE spmvbench_core)
+  if(SPMVBENCH_CUDA_ON)
+    # bench_main.cpp includes <cuda_runtime.h> via spmv_cuda.cuh and calls the
+    # explicitly instantiated CUDA wrappers, so it needs the toolkit include
+    # directories and device-link step as well.
+    target_link_libraries(bench PRIVATE CUDA::cudart CUDA::cusparse)
+    set_target_properties(bench PROPERTIES CUDA_RESOLVE_DEVICE_SYMBOLS ON)
+  endif()
 endif()
 
 # ---------------------------------------------------------------------------
