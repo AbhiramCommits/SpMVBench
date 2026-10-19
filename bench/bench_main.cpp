@@ -67,7 +67,7 @@ void print_help(const char* argv0) {
       "  %s --auto  --all [--cpu]       oracle for every matrix\n"
       "  %s --validate                  validate every kernel vs SciPy "
       "reference\n"
-      "  %s --bench [--iters N] [--cpu-only|--gpu-only]\n"
+      "  %s --bench [--iters N] [--cpu-iters M] [--cpu-only|--gpu-only]\n"
       "  %s --help                      print this message\n"
       "\n"
       "Benchmark baselines: OpenMP CSR on CPU; cuSPARSE SpMV/SpMM on GPU.\n",
@@ -414,6 +414,7 @@ struct BenchRow {
   std::string device;  // "cpu" | "cuda"
   std::string matrix, precision, kernel;
   bool is_baseline = false;
+  int iters = 0;
   double mean_ms = 0, min_ms = 0, median_ms = 0, max_ms = 0;
   double gflops = 0;
   double bw_lo = 0, bw_hi = 0, bw_pct_peak = 0;  // GB/s and % of GPU peak
@@ -480,6 +481,7 @@ std::vector<BenchRow> bench_cpu_type(const std::string& name,
     r.precision = prec;
     r.kernel = kernel;
     r.is_baseline = baseline;
+    r.iters = s.iters;
     r.mean_ms = s.mean_ms;
     r.min_ms = s.min_ms;
     r.median_ms = s.median_ms;
@@ -603,6 +605,7 @@ std::vector<BenchRow> bench_gpu_type(const std::string& name,
     row.precision = prec;
     row.kernel = kernel;
     row.is_baseline = is_baseline;
+    row.iters = r.iters;
     row.mean_ms = r.mean_ms;
     row.min_ms = r.min_ms;
     row.median_ms = r.median_ms;
@@ -689,6 +692,7 @@ std::vector<BenchRow> bench_gpu_type(const std::string& name,
     brow.precision = prec;
     brow.kernel = "cusparse_spmm";
     brow.is_baseline = true;
+    brow.iters = csp.iters;
     brow.mean_ms = csp.mean_ms;
     brow.min_ms = csp.min_ms;
     brow.median_ms = csp.median_ms;
@@ -720,6 +724,7 @@ std::vector<BenchRow> bench_gpu_type(const std::string& name,
         r.kernel = "spmm_tiled_t" + std::to_string(tile) +
                    (balanced ? "_bucketed" : "_uniform");
         r.is_baseline = false;
+        r.iters = sp.iters;
         r.mean_ms = sp.mean_ms;
         r.min_ms = sp.min_ms;
         r.median_ms = sp.median_ms;
@@ -752,7 +757,11 @@ std::vector<BenchRow> bench_gpu_type(const std::string& name,
 #endif  // SPMVBENCH_ENABLE_CUDA
 
 int cmd_bench(const std::vector<std::string>& args) {
+  // GPU timing uses the requested 50+ CUDA-event iterations. CPU iterations
+  // are independently capped because a few CPU kernels (padded ELL on skewed
+  // matrices) are orders of magnitude slower.
   int iters = 50, warmup = 10;
+  int cpu_iters = 10, cpu_warmup = 3;
   bool cpu_only = false, gpu_only = false;
   std::string only;
   for (std::size_t i = 0; i < args.size(); ++i) {
@@ -760,6 +769,10 @@ int cmd_bench(const std::vector<std::string>& args) {
       iters = std::stoi(args[++i]);
     else if (args[i] == "--warmup" && i + 1 < args.size())
       warmup = std::stoi(args[++i]);
+    else if (args[i] == "--cpu-iters" && i + 1 < args.size())
+      cpu_iters = std::stoi(args[++i]);
+    else if (args[i] == "--cpu-warmup" && i + 1 < args.size())
+      cpu_warmup = std::stoi(args[++i]);
     else if (args[i] == "--cpu-only")
       cpu_only = true;
     else if (args[i] == "--gpu-only")
@@ -815,13 +828,13 @@ int cmd_bench(const std::vector<std::string>& args) {
     const std::vector<double> xd = make_x_deterministic(Ad.n, 999u);
 
     if (!gpu_only) {
-      for (auto& r :
-           bench_cpu_type<double, double>(name, Ad, xd, iters, warmup, "fp64"))
+      for (auto& r : bench_cpu_type<double, double>(name, Ad, xd, cpu_iters,
+                                                    cpu_warmup, "fp64"))
         all.push_back(r);
       spmvbench::CsrMatrix<float> Af = spmvbench::read_matrix_market<float>(p);
       std::vector<float> xf(xd.begin(), xd.end());
-      for (auto& r :
-           bench_cpu_type<float, float>(name, Af, xf, iters, warmup, "fp32"))
+      for (auto& r : bench_cpu_type<float, float>(name, Af, xf, cpu_iters,
+                                                  cpu_warmup, "fp32"))
         all.push_back(r);
     }
 #ifdef SPMVBENCH_ENABLE_CUDA
@@ -842,15 +855,15 @@ int cmd_bench(const std::vector<std::string>& args) {
 
   fs::create_directories("results");
   std::ofstream csv("results/bench.csv");
-  csv << "device,matrix,precision,kernel,is_baseline,median_ms,min_ms,mean_ms,"
-         "max_ms,gflops,bw_lo_gbs,bw_hi_gbs,bw_pct_peak,transfer_ms,speedup,"
-         "baseline\n";
+  csv << "device,matrix,precision,kernel,is_baseline,iters,median_ms,min_ms,"
+         "mean_ms,max_ms,gflops,bw_lo_gbs,bw_hi_gbs,bw_pct_peak,transfer_ms,"
+         "speedup,baseline\n";
   for (const auto& r : all) {
     csv << r.device << "," << r.matrix << "," << r.precision << "," << r.kernel
-        << "," << (r.is_baseline ? 1 : 0) << "," << r.median_ms << ","
-        << r.min_ms << "," << r.mean_ms << "," << r.max_ms << "," << r.gflops
-        << "," << r.bw_lo << "," << r.bw_hi << "," << r.bw_pct_peak << ","
-        << r.transfer_ms << ",";
+        << "," << (r.is_baseline ? 1 : 0) << "," << r.iters << ","
+        << r.median_ms << "," << r.min_ms << "," << r.mean_ms << "," << r.max_ms
+        << "," << r.gflops << "," << r.bw_lo << "," << r.bw_hi << ","
+        << r.bw_pct_peak << "," << r.transfer_ms << ",";
     if (!r.is_baseline)
       csv << r.speedup;
     csv << "," << r.baseline << "\n";
@@ -881,8 +894,9 @@ int cmd_bench(const std::vector<std::string>& args) {
   }
   md << "MKL `mkl_sparse_d_mv` baseline: "
      << (spmvbench::mkl_available() ? "available" : "not available") << ".\n\n";
-  md << "Median and min over " << iters << " timed iterations (warmup "
-     << warmup
+  md << "GPU: median and min over " << iters << " CUDA-event iterations "
+     << "(warmup " << warmup << "); CPU: median and min over " << cpu_iters
+     << " steady-clock iterations (warmup " << cpu_warmup
      << "). Kernel time excludes host<->device transfers; `transfer` is the "
         "separate H2D+D2H time.\n\n";
 
