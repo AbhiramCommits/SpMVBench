@@ -801,7 +801,7 @@ int cmd_bench(const std::vector<std::string>& args) {
         "%.1f GB/s\n",
         gpu_name.c_str(), gpu_major, gpu_minor, gpu_peak);
     std::printf(
-        "[bench] peak = 2 * memoryClockRate * (memoryBusWidth / 8); "
+        "[bench] peak is the vendor spec value assumed from the device name; "
         "bandwidth %% is the no-reuse model vs this peak\n");
   }
   std::printf("[bench] MKL baseline: %s\n",
@@ -861,7 +861,7 @@ int cmd_bench(const std::vector<std::string>& args) {
     info << "name=" << gpu_name << "\n"
          << "compute_capability=" << gpu_major << "." << gpu_minor << "\n"
          << "assumed_peak_gbs=" << gpu_peak << "\n"
-         << "peak_formula=2*memoryClockRate*(memoryBusWidth/8)\n"
+         << "peak_source=vendor spec assumed from device name\n"
          << "bandwidth_model=no-reuse (x/B fetched per nonzero)\n"
          << "mkl_available=" << (spmvbench::mkl_available() ? 1 : 0) << "\n";
   } else {
@@ -874,7 +874,7 @@ int cmd_bench(const std::vector<std::string>& args) {
   if (use_gpu) {
     md << "GPU: **" << gpu_name << "** (sm_" << gpu_major << gpu_minor
        << "). Assumed theoretical peak bandwidth: **" << gpu_peak
-       << " GB/s** (`2 * memoryClockRate * memoryBusWidth/8`). "
+       << " GB/s** (vendor spec assumed from the device name). "
           "Achieved bandwidth uses the no-reuse traffic model.\n\n";
   } else {
     md << "CPU-only run. GPU baselines are not available.\n\n";

@@ -201,18 +201,27 @@ GpuInfo query_gpu() {
   g.name = prop.name;
   g.major = prop.major;
   g.minor = prop.minor;
-  // Theoretical HBM/GDDR peak: double data rate * clock * bus width in bytes.
-  // CUDA 13 removed memoryClockRate/memoryBusWidth from cudaDeviceProp, so
-  // query the equivalent device attributes instead.
-  int mem_clock_khz = 0;
-  int bus_width_bits = 0;
-  cudaDeviceGetAttribute(&mem_clock_khz, cudaDevAttrMemoryClockRate, dev);
-  cudaDeviceGetAttribute(&bus_width_bits, cudaDevAttrMemoryBusWidth, dev);
-  if (mem_clock_khz > 0 && bus_width_bits > 0) {
-    g.peak_gbs = 2.0 * static_cast<double>(mem_clock_khz) * 1e3 *
-                 (static_cast<double>(bus_width_bits) / 8.0) / 1e9;
-    g.peak_known = true;
+  // CUDA 13 removed memoryClockRate/memoryBusWidth from cudaDeviceProp and the
+  // corresponding runtime attributes, so assume the vendor's spec peak for the
+  // device name. The benchmark prints this assumed value explicitly.
+  const std::string name = prop.name;
+  auto has = [&](const char* s) { return name.find(s) != std::string::npos; };
+  if (has("T4")) {
+    g.peak_gbs = 320.0;  // Tesla T4, 256-bit GDDR6 @ 10 Gbps
+  } else if (has("V100")) {
+    g.peak_gbs = 900.0;  // V100 SXM2
+  } else if (has("A100")) {
+    g.peak_gbs = 1555.0;  // A100 PCIe (SXM is 2039)
+  } else if (has("H100")) {
+    g.peak_gbs = 3350.0;  // H100 SXM
+  } else if (has("L4")) {
+    g.peak_gbs = 300.0;
+  } else if (has("P100")) {
+    g.peak_gbs = 732.0;
+  } else if (has("K80")) {
+    g.peak_gbs = 480.0;
   }
+  g.peak_known = g.peak_gbs > 0.0;
   return g;
 }
 

@@ -72,7 +72,7 @@ def build_summary():
         lines.append(f"**GPU:** {gpu_info['name']} (sm_{gpu_info.get('compute_capability','?')}). "
                      f"Assumed theoretical peak bandwidth: "
                      f"**{gpu_info.get('assumed_peak_gbs','?')} GB/s** "
-                     f"(`2 * memoryClockRate * memoryBusWidth/8`). Achieved "
+                     f"(vendor spec assumed from the device name). Achieved "
                      f"bandwidth uses the no-reuse traffic model.\n")
     lines.append("Kernel times are medians over 50+ CUDA-event / steady-clock "
                  "iterations after warmup, excluding host-device transfers; "
