@@ -6,6 +6,7 @@
 #include "spmvbench/spmv_cuda.cuh"
 
 #include <algorithm>
+#include <cstddef>
 #include <vector>
 
 namespace spmvbench {

@@ -8,6 +8,7 @@
 
 #include <algorithm>
 #include <cmath>
+#include <cstddef>
 #include <stdexcept>
 
 #include "spmvbench/bcsr.hpp"
@@ -18,6 +19,15 @@ namespace spmvbench {
 namespace {
 
 constexpr int kWarp = 32;
+
+// Block-shape tags for the two BCSR instantiations. They must live at
+// namespace scope: a local class is not allowed to have static data members.
+struct Tag22 {
+  static constexpr int R = 2, C = 2;
+};
+struct Tag44 {
+  static constexpr int R = 4, C = 4;
+};
 
 template <typename Acc>
 __device__ __forceinline__ Acc warp_reduce_sum(Acc v, unsigned mask) {
@@ -221,12 +231,6 @@ void SpmvRunner<T, Acc>::upload_matrix() {
     copy_to_device(*c, b.colind);
     copy_to_device(*v, b.values);
     *out = DeviceBcsr<T>{*r, *c, *v, m, n, R, C, b.mb, b.block_nnz};
-  };
-  struct Tag22 {
-    static constexpr int R = 2, C = 2;
-  };
-  struct Tag44 {
-    static constexpr int R = 4, C = 4;
   };
   upload_bcsr(Tag22{}, &d_b2_values_, &d_b2_colind_, &d_b2_rowptr_, &d_bcsr2_);
   upload_bcsr(Tag44{}, &d_b4_values_, &d_b4_colind_, &d_b4_rowptr_, &d_bcsr4_);
