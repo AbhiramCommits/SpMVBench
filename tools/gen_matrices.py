@@ -30,8 +30,17 @@ SUITESPARSE_GROUPS = {
     "consph": "DNVS",
     "cfd1": "Rothberg",
     "cfd2": "Rothberg",
+    # SNAP graphs: strongly heavy-tailed row-length distributions.
+    "amazon0302": "SNAP",
+    "wiki-Vote": "SNAP",
 }
+
+# Curated real-matrix set: one nearly uniform, one moderate, two power-law.
+SUITESPARSE_SET = ["cage10", "cfd1", "amazon0302", "wiki-Vote"]
 SUITESPARSE_MIRRORS = (
+    # Legacy UF host; the current sparse.tamu.edu file host has intermittently
+    # returned S3 AccessDenied, so try this mirror first.
+    "https://www.cise.ufl.edu/research/sparse/MM/{group}/{name}.tar.gz",
     "https://suitesparse-collection-website.herokuapp.com/MM/{group}/{name}.tar.gz",
     "https://sparse.tamu.edu/MM/{group}/{name}.tar.gz",
 )
@@ -226,6 +235,8 @@ def main() -> int:
     ap = argparse.ArgumentParser(description="Generate SpMVBench matrices")
     ap.add_argument("--suitesparse", metavar="NAME", action="append", default=[],
                     help="also download a SuiteSparse matrix (e.g. cage10, consph)")
+    ap.add_argument("--suitesparse-set", action="store_true",
+                    help="download the curated set: " + ", ".join(SUITESPARSE_SET))
     args = ap.parse_args()
 
     os.makedirs(DATA_DIR, exist_ok=True)
@@ -236,7 +247,14 @@ def main() -> int:
         size = os.path.getsize(path)
         print(f"[gen] {os.path.basename(path):24s} {size/1e6:8.2f} MB")
 
-    for name in args.suitesparse:
+    wanted = list(args.suitesparse)
+    if args.suitesparse_set:
+        wanted.extend(SUITESPARSE_SET)
+    seen = set()
+    for name in wanted:
+        if name in seen:
+            continue
+        seen.add(name)
         fetch_suitesparse(name)
 
     print("[gen] done")

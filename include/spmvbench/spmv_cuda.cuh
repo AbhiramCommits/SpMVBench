@@ -88,10 +88,26 @@ struct DeviceBcsr {
 struct SpmvResult {
   double mean_ms = 0.0;
   double min_ms = 0.0;
+  double median_ms = 0.0;
   double max_ms = 0.0;
+  // Host<->device traffic (H2D x + D2H y) timed separately from the kernel.
+  double transfer_ms = 0.0;
   int iters = 0;
   std::string kernel;
 };
+
+// Device properties needed by the benchmark/report to normalize bandwidth.
+struct GpuInfo {
+  std::string name;
+  int major = 0;
+  int minor = 0;
+  double peak_gbs = 0.0;  // theoretical: 2 * memClock * busWidth/8
+  bool peak_known = false;
+};
+
+// True when a CUDA device is present. Unlike query_gpu(), this never aborts.
+bool gpu_available();
+GpuInfo query_gpu();
 
 // ---------------------------------------------------------------------------
 // SpmvRunner: owns device buffers for one CSR matrix, uploads x once, and can
@@ -117,11 +133,17 @@ class SpmvRunner {
   // Copy the last result vector back to the host.
   std::vector<Acc> result() const;
 
+  // Storage sizes of the converted formats (for bandwidth models).
+  std::int64_t ell_padded_nnz() const;
+  std::int64_t bcsr_block_nnz(int block) const;  // block = 2 or 4
+
  private:
   void upload_matrix();
   void free_buffers();
+  double measure_transfer_ms(int iters);
 
   const CsrMatrix<T> A_;
+  std::vector<T> host_x_;
   DeviceCsr<T> d_csr_{};
   DeviceEll<T> d_ell_{};
   DeviceBcsr<T> d_bcsr2_{};  // 2x2

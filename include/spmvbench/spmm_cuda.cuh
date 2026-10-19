@@ -21,7 +21,10 @@ namespace spmvbench {
 struct SpmmResult {
   double mean_ms = 0.0;
   double min_ms = 0.0;
+  double median_ms = 0.0;
   double max_ms = 0.0;
+  // Host<->device traffic (H2D B + D2H Y) timed separately from the kernel.
+  double transfer_ms = 0.0;
   int iters = 0;
   std::string kernel;
 };

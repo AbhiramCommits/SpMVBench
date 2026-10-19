@@ -9,6 +9,8 @@
 #include <cstddef>
 #include <vector>
 
+#include "spmvbench/timer.hpp"
+
 namespace spmvbench {
 namespace {
 
@@ -93,7 +95,8 @@ SpmvResult run_cusparse_spmv(const CsrMatrix<T>& A, const std::vector<T>& x,
   cudaEvent_t start, stop;
   CUDA_CHECK(cudaEventCreate(&start));
   CUDA_CHECK(cudaEventCreate(&stop));
-  double sum = 0.0, mn = 1e300, mx = 0.0;
+  std::vector<double> samples;
+  samples.reserve(static_cast<std::size_t>(std::max(1, iters)));
   for (int i = 0; i < iters; ++i) {
     CUDA_CHECK(cudaEventRecord(start));
     CUSPARSE_CHECK(cusparseSpMV(handle, op, &alpha, matA, vecX, &beta, vecY,
@@ -102,13 +105,25 @@ SpmvResult run_cusparse_spmv(const CsrMatrix<T>& A, const std::vector<T>& x,
     CUDA_CHECK(cudaEventSynchronize(stop));
     float ms = 0.f;
     CUDA_CHECK(cudaEventElapsedTime(&ms, start, stop));
-    sum += ms;
-    mn = std::min(mn, static_cast<double>(ms));
-    mx = std::max(mx, static_cast<double>(ms));
+    samples.push_back(static_cast<double>(ms));
   }
 
   y.resize(m);
-  CUDA_CHECK(cudaMemcpy(y.data(), d_y, m * sizeof(T), cudaMemcpyDeviceToHost));
+  // Separate transfer timing: H2D x + D2H y, kernel excluded.
+  std::vector<double> xfer;
+  xfer.reserve(10);
+  for (int i = 0; i < 10; ++i) {
+    CUDA_CHECK(cudaEventRecord(start));
+    CUDA_CHECK(
+        cudaMemcpy(d_x, x.data(), n * sizeof(T), cudaMemcpyHostToDevice));
+    CUDA_CHECK(
+        cudaMemcpy(y.data(), d_y, m * sizeof(T), cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaEventRecord(stop));
+    CUDA_CHECK(cudaEventSynchronize(stop));
+    float ms = 0.f;
+    CUDA_CHECK(cudaEventElapsedTime(&ms, start, stop));
+    xfer.push_back(static_cast<double>(ms));
+  }
 
   CUDA_CHECK(cudaEventDestroy(start));
   CUDA_CHECK(cudaEventDestroy(stop));
@@ -123,11 +138,14 @@ SpmvResult run_cusparse_spmv(const CsrMatrix<T>& A, const std::vector<T>& x,
   cudaFree(d_y);
   cudaFree(d_buffer);
 
+  const TimingSummary st = summarize(samples);
   SpmvResult r;
-  r.iters = iters;
-  r.mean_ms = sum / std::max(1, iters);
-  r.min_ms = mn;
-  r.max_ms = mx;
+  r.iters = st.iters;
+  r.mean_ms = st.mean_ms;
+  r.min_ms = st.min_ms;
+  r.median_ms = st.median_ms;
+  r.max_ms = st.max_ms;
+  r.transfer_ms = summarize(xfer).median_ms;
   r.kernel = "cusparse_spmv";
   return r;
 }

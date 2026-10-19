@@ -13,6 +13,7 @@
 
 #include "spmvbench/bcsr.hpp"
 #include "spmvbench/ell.hpp"
+#include "spmvbench/timer.hpp"
 
 namespace spmvbench {
 
@@ -182,6 +183,34 @@ void cuda_malloc(Ptr** ptr, std::size_t bytes) {
 }  // namespace
 
 // ---------------------------------------------------------------------------
+// Device properties
+// ---------------------------------------------------------------------------
+bool gpu_available() {
+  int count = 0;
+  if (cudaGetDeviceCount(&count) != cudaSuccess)
+    return false;
+  return count > 0;
+}
+
+GpuInfo query_gpu() {
+  int dev = 0;
+  CUDA_CHECK(cudaGetDevice(&dev));
+  cudaDeviceProp prop{};
+  CUDA_CHECK(cudaGetDeviceProperties(&prop, dev));
+  GpuInfo g;
+  g.name = prop.name;
+  g.major = prop.major;
+  g.minor = prop.minor;
+  // Theoretical HBM/GDDR peak: double data rate * clock * bus width in bytes.
+  if (prop.memoryClockRate > 0 && prop.memoryBusWidth > 0) {
+    g.peak_gbs = 2.0 * static_cast<double>(prop.memoryClockRate) * 1e3 *
+                 (static_cast<double>(prop.memoryBusWidth) / 8.0) / 1e9;
+    g.peak_known = true;
+  }
+  return g;
+}
+
+// ---------------------------------------------------------------------------
 // SpmvRunner
 // ---------------------------------------------------------------------------
 template <typename T, typename Acc>
@@ -260,6 +289,7 @@ void SpmvRunner<T, Acc>::free_buffers() {
 
 template <typename T, typename Acc>
 void SpmvRunner<T, Acc>::set_x(const std::vector<T>& x) {
+  host_x_ = x;
   copy_to_device(d_x_, x);
 }
 
@@ -270,6 +300,50 @@ std::vector<Acc> SpmvRunner<T, Acc>::result() const {
     CUDA_CHECK(
         cudaMemcpy(y.data(), d_y_, A_.m * sizeof(Acc), cudaMemcpyDeviceToHost));
   return y;
+}
+
+template <typename T, typename Acc>
+std::int64_t SpmvRunner<T, Acc>::ell_padded_nnz() const {
+  return static_cast<std::int64_t>(d_ell_.m) * d_ell_.max_row_nnz;
+}
+
+template <typename T, typename Acc>
+std::int64_t SpmvRunner<T, Acc>::bcsr_block_nnz(int block) const {
+  return block <= 2 ? d_bcsr2_.block_nnz : d_bcsr4_.block_nnz;
+}
+
+// Time one H2D upload of x plus one D2H download of y, excluding kernel time.
+template <typename T, typename Acc>
+double SpmvRunner<T, Acc>::measure_transfer_ms(int iters) {
+  if (A_.m == 0 || A_.n == 0 || host_x_.empty())
+    return 0.0;
+  std::vector<Acc> host_y(static_cast<std::size_t>(A_.m));
+  for (int i = 0; i < 2; ++i) {
+    CUDA_CHECK(cudaMemcpy(d_x_, host_x_.data(), host_x_.size() * sizeof(T),
+                          cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(host_y.data(), d_y_, A_.m * sizeof(Acc),
+                          cudaMemcpyDeviceToHost));
+  }
+  cudaEvent_t start, stop;
+  CUDA_CHECK(cudaEventCreate(&start));
+  CUDA_CHECK(cudaEventCreate(&stop));
+  std::vector<double> samples;
+  samples.reserve(static_cast<std::size_t>(iters));
+  for (int i = 0; i < iters; ++i) {
+    CUDA_CHECK(cudaEventRecord(start));
+    CUDA_CHECK(cudaMemcpy(d_x_, host_x_.data(), host_x_.size() * sizeof(T),
+                          cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(host_y.data(), d_y_, A_.m * sizeof(Acc),
+                          cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaEventRecord(stop));
+    CUDA_CHECK(cudaEventSynchronize(stop));
+    float ms = 0.f;
+    CUDA_CHECK(cudaEventElapsedTime(&ms, start, stop));
+    samples.push_back(static_cast<double>(ms));
+  }
+  CUDA_CHECK(cudaEventDestroy(start));
+  CUDA_CHECK(cudaEventDestroy(stop));
+  return summarize(samples).median_ms;
 }
 
 template <typename T, typename Acc>
@@ -371,7 +445,8 @@ SpmvResult SpmvRunner<T, Acc>::run(KernelId id, int iters, int lanes, int block,
   CUDA_CHECK(cudaEventCreate(&start));
   CUDA_CHECK(cudaEventCreate(&stop));
 
-  double sum = 0.0, mn = 1e300, mx = 0.0;
+  std::vector<double> samples;
+  samples.reserve(static_cast<std::size_t>(std::max(1, iters)));
   for (int i = 0; i < iters; ++i) {
     CUDA_CHECK(cudaEventRecord(start));
     launch(lanes);
@@ -379,18 +454,19 @@ SpmvResult SpmvRunner<T, Acc>::run(KernelId id, int iters, int lanes, int block,
     CUDA_CHECK(cudaEventSynchronize(stop));
     float ms = 0.f;
     CUDA_CHECK(cudaEventElapsedTime(&ms, start, stop));
-    sum += ms;
-    mn = std::min(mn, static_cast<double>(ms));
-    mx = std::max(mx, static_cast<double>(ms));
+    samples.push_back(static_cast<double>(ms));
   }
   CUDA_CHECK(cudaEventDestroy(start));
   CUDA_CHECK(cudaEventDestroy(stop));
 
+  const TimingSummary st = summarize(samples);
   SpmvResult r;
-  r.iters = iters;
-  r.mean_ms = sum / std::max(1, iters);
-  r.min_ms = mn;
-  r.max_ms = mx;
+  r.iters = st.iters;
+  r.mean_ms = st.mean_ms;
+  r.min_ms = st.min_ms;
+  r.median_ms = st.median_ms;
+  r.max_ms = st.max_ms;
+  r.transfer_ms = measure_transfer_ms(10);
   r.kernel = kernel_name(id);
   return r;
 }

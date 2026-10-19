@@ -15,6 +15,8 @@
 #include <string>
 #include <vector>
 
+#include "spmvbench/timer.hpp"
+
 namespace spmvbench {
 namespace {
 
@@ -217,7 +219,8 @@ SpmmResult run_tiled(const CsrMatrix<T>& A, const std::vector<T>& B, int k,
   cudaEvent_t start, stop;
   CUDA_CHECK(cudaEventCreate(&start));
   CUDA_CHECK(cudaEventCreate(&stop));
-  double sum = 0.0, mn = 1e300, mx = 0.0;
+  std::vector<double> samples;
+  samples.reserve(static_cast<std::size_t>(std::max(1, iters)));
   for (int i = 0; i < iters; ++i) {
     CUDA_CHECK(cudaEventRecord(start));
     launch();
@@ -225,15 +228,26 @@ SpmmResult run_tiled(const CsrMatrix<T>& A, const std::vector<T>& B, int k,
     CUDA_CHECK(cudaEventSynchronize(stop));
     float ms = 0.f;
     CUDA_CHECK(cudaEventElapsedTime(&ms, start, stop));
-    sum += ms;
-    mn = std::min(mn, (double)ms);
-    mx = std::max(mx, (double)ms);
+    samples.push_back(static_cast<double>(ms));
   }
 
   Y.assign(static_cast<std::size_t>(m) * k, T(0));
   std::vector<Acc> yacc(static_cast<std::size_t>(m) * k);
-  CUDA_CHECK(cudaMemcpy(yacc.data(), d_Y, (std::size_t)m * k * sizeof(Acc),
-                        cudaMemcpyDeviceToHost));
+  // Separate transfer timing: H2D B + D2H Y, kernel excluded.
+  std::vector<double> xfer;
+  xfer.reserve(10);
+  for (int i = 0; i < 10; ++i) {
+    CUDA_CHECK(cudaEventRecord(start));
+    CUDA_CHECK(cudaMemcpy(d_B, B.data(), (std::size_t)n * k * sizeof(T),
+                          cudaMemcpyHostToDevice));
+    CUDA_CHECK(cudaMemcpy(yacc.data(), d_Y, (std::size_t)m * k * sizeof(Acc),
+                          cudaMemcpyDeviceToHost));
+    CUDA_CHECK(cudaEventRecord(stop));
+    CUDA_CHECK(cudaEventSynchronize(stop));
+    float ms = 0.f;
+    CUDA_CHECK(cudaEventElapsedTime(&ms, start, stop));
+    xfer.push_back(static_cast<double>(ms));
+  }
   for (std::size_t i = 0; i < yacc.size(); ++i)
     Y[i] = static_cast<T>(yacc[i]);
 
@@ -245,11 +259,14 @@ SpmmResult run_tiled(const CsrMatrix<T>& A, const std::vector<T>& B, int k,
   cudaFree(d_B);
   cudaFree(d_Y);
 
+  const TimingSummary st = summarize(samples);
   SpmmResult r;
-  r.iters = iters;
-  r.mean_ms = sum / std::max(1, iters);
-  r.min_ms = mn;
-  r.max_ms = mx;
+  r.iters = st.iters;
+  r.mean_ms = st.mean_ms;
+  r.min_ms = st.min_ms;
+  r.median_ms = st.median_ms;
+  r.max_ms = st.max_ms;
+  r.transfer_ms = summarize(xfer).median_ms;
   r.kernel = "spmm_csr_tiled";
   return r;
 }

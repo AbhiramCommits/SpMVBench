@@ -76,6 +76,18 @@ if(SPMVBENCH_OPENMP)
 endif()
 
 # ---------------------------------------------------------------------------
+# Optional Intel MKL baseline (mkl_sparse_d_mv)
+# ---------------------------------------------------------------------------
+set(SPMVBENCH_MKL_FOUND OFF)
+find_package(MKL CONFIG QUIET)
+if(MKL_FOUND)
+  set(SPMVBENCH_MKL_FOUND ON)
+  message(STATUS "SpMVBench: MKL found -> mkl_sparse_d_mv baseline enabled")
+else()
+  message(STATUS "SpMVBench: MKL not found -> MKL baseline disabled")
+endif()
+
+# ---------------------------------------------------------------------------
 # Core library
 # ---------------------------------------------------------------------------
 set(SPMVBENCH_CORE_SOURCES
@@ -84,6 +96,7 @@ set(SPMVBENCH_CORE_SOURCES
   src/stats.cpp
   src/cpu/spmv_cpu.cpp
   src/cpu/spmm_cpu.cpp
+  src/cpu/mkl_spmv.cpp
 )
 
 # Optional sources are folded in when present, which keeps the build working
@@ -108,6 +121,12 @@ endif()
 
 add_library(spmvbench_core ${SPMVBENCH_CORE_SOURCES})
 target_include_directories(spmvbench_core PUBLIC ${CMAKE_CURRENT_SOURCE_DIR}/include)
+
+if(SPMVBENCH_MKL_FOUND)
+  target_compile_definitions(spmvbench_core PUBLIC SPMVBENCH_HAS_MKL=1)
+  target_link_libraries(spmvbench_core PUBLIC MKL::MKL)
+endif()
+
 target_compile_options(spmvbench_core PRIVATE
   $<$<COMPILE_LANGUAGE:CXX>:-O3>
   $<$<COMPILE_LANGUAGE:CXX>:-Wall>)
