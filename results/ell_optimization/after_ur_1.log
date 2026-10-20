@@ -1,0 +1,5 @@
+[bench] uniform_random ...
+[bench] GPU: Tesla T4 (sm_75), assumed theoretical peak HBM bandwidth = 320.0 GB/s
+[bench] peak is the vendor spec value assumed from the device name; bandwidth % is the no-reuse model vs this peak
+[bench] MKL baseline: not available
+[bench] wrote results/bench.csv (28 rows), results/bench.md, results/gpu_info.txt

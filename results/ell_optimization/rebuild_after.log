@@ -1,0 +1,18 @@
+[  6%] Built target gtest
+[ 12%] Built target gtest_main
+[ 18%] Built target gmock
+[ 21%] Building CUDA object CMakeFiles/spmvbench_core.dir/src/cuda/spmv_cuda.cu.o
+[ 27%] Built target gmock_main
+[ 30%] Linking CXX static library libspmvbench_core.a
+[ 63%] Built target spmvbench_core
+[ 66%] Building CXX object CMakeFiles/bench.dir/bench/bench_main.cpp.o
+[ 69%] Building CXX object tests/CMakeFiles/spmvbench_tests.dir/test_formats.cpp.o
+[ 72%] Building CXX object tests/CMakeFiles/spmvbench_tests.dir/test_spmv_correctness.cpp.o
+[ 78%] Building CXX object tests/CMakeFiles/spmvbench_tests.dir/test_cuda_correctness.cpp.o
+[ 78%] Building CXX object tests/CMakeFiles/spmvbench_tests.dir/test_spmm_correctness.cpp.o
+[ 81%] Linking CUDA device code CMakeFiles/bench.dir/cmake_device_link.o
+[ 84%] Linking CXX executable bench
+[ 84%] Built target bench
+[ 87%] Linking CUDA device code CMakeFiles/spmvbench_tests.dir/cmake_device_link.o
+[ 90%] Linking CXX executable spmvbench_tests
+[100%] Built target spmvbench_tests
