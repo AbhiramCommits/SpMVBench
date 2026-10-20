@@ -1,0 +1,9 @@
+matrix,gpu_best,gpu_median_ms,gpu_speedup_vs_cusparse,cpu_best_parallel,cpu_median_ms,cpu_speedup_vs_openmp
+amazon0302,ell,0.095088,1.91,csr_merge_omp,2.61499,0.79
+banded_100k,ell,0.035744,1.28,ell_omp,0.430097,0.96
+cage10,csr_vector_l4,0.009904,1.80,csr_merge_omp,0.133367,0.93
+cfd1,ell,0.125536,1.66,csr_merge_omp,1.44367,0.85
+diag_dominant_small,csr_vector_l4,0.006176,2.56,ell_omp,0.0120645,0.93
+powerlaw_skew,csr_warp,0.220256,0.55,csr_merge_omp,0.898087,0.91
+uniform_random,ell,0.10632,1.37,csr_merge_omp,1.13121,0.89
+wiki-Vote,csr_warp,0.050528,0.70,csr_merge_omp,0.130727,1.01
