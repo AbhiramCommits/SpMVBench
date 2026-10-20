@@ -64,39 +64,39 @@ Bandwidth uses the no-reuse traffic model. Values above 100% of peak mean that m
 
 ## Heuristic vs measured oracle
 
-- **GPU**: 0/9 = 0% fastest; worst slowdown 7.16x
+- **GPU**: 0/9 = 0% fastest; worst slowdown 2.31x
 
 | device | matrix | chosen | oracle best | chosen ms | best ms | hit | slowdown |
 |--------|--------|--------|-------------|----------:|--------:|-----|---------:|
-| GPU | amazon0302 | csr_vector | ell | 0.1192 | 0.09424 | no | 1.27x |
-| GPU | banded_100k | csr_vector | ell | 0.04925 | 0.03624 | no | 1.36x |
-| GPU | cage10 | csr_vector | ell | 0.01434 | 0.01035 | no | 1.38x |
-| GPU | cfd1 | csr_vector | ell | 0.1449 | 0.1211 | no | 1.2x |
-| GPU | diag_dominant_small | csr_scalar | csr_vector | 0.007456 | 0.005808 | no | 1.28x |
-| GPU | powerlaw_skew | csr_merge | csr_vector | 0.2295 | 0.03205 | no | 7.16x |
-| GPU | tiny_3x3 | csr_scalar | bcsr | 0.004848 | 0.004672 | no | 1.04x |
-| GPU | uniform_random | csr_vector | ell | 0.1046 | 0.06621 | no | 1.58x |
-| GPU | wiki-Vote | csr_merge | csr_vector | 0.02616 | 0.007744 | no | 3.38x |
+| GPU | amazon0302 | csr_vector | ell | 0.2212 | 0.09571 | no | 2.31x |
+| GPU | banded_100k | csr_vector | ell | 0.04922 | 0.03584 | no | 1.37x |
+| GPU | cage10 | csr_vector | ell | 0.01434 | 0.0104 | no | 1.38x |
+| GPU | cfd1 | csr_vector | ell | 0.1456 | 0.1209 | no | 1.2x |
+| GPU | diag_dominant_small | csr_scalar | csr_vector | 0.007424 | 0.006112 | no | 1.21x |
+| GPU | powerlaw_skew | csr_merge | csr_warp | 0.2446 | 0.2212 | no | 1.11x |
+| GPU | tiny_3x3 | csr_scalar | csr_vector | 0.005104 | 0.004768 | no | 1.07x |
+| GPU | uniform_random | csr_vector | ell | 0.1024 | 0.06554 | no | 1.56x |
+| GPU | wiki-Vote | csr_merge | csr_vector | 0.02635 | 0.01434 | no | 1.84x |
 
 ### Selector misses
 
-- **amazon0302** (GPU): `csr_vector` at 0.1192 ms vs `ell` at 0.09424 ms -> **1.27x slower**.
+- **amazon0302** (GPU): `csr_vector` at 0.2212 ms vs `ell` at 0.09571 ms -> **2.31x slower**.
 
-- **banded_100k** (GPU): `csr_vector` at 0.04925 ms vs `ell` at 0.03624 ms -> **1.36x slower**.
+- **banded_100k** (GPU): `csr_vector` at 0.04922 ms vs `ell` at 0.03584 ms -> **1.37x slower**.
 
-- **cage10** (GPU): `csr_vector` at 0.01434 ms vs `ell` at 0.01035 ms -> **1.38x slower**.
+- **cage10** (GPU): `csr_vector` at 0.01434 ms vs `ell` at 0.0104 ms -> **1.38x slower**.
 
-- **cfd1** (GPU): `csr_vector` at 0.1449 ms vs `ell` at 0.1211 ms -> **1.2x slower**.
+- **cfd1** (GPU): `csr_vector` at 0.1456 ms vs `ell` at 0.1209 ms -> **1.2x slower**.
 
-- **diag_dominant_small** (GPU): `csr_scalar` at 0.007456 ms vs `csr_vector` at 0.005808 ms -> **1.28x slower**.
+- **diag_dominant_small** (GPU): `csr_scalar` at 0.007424 ms vs `csr_vector` at 0.006112 ms -> **1.21x slower**.
 
-- **powerlaw_skew** (GPU): `csr_merge` at 0.2295 ms vs `csr_vector` at 0.03205 ms -> **7.16x slower**.
+- **powerlaw_skew** (GPU): `csr_merge` at 0.2446 ms vs `csr_warp` at 0.2212 ms -> **1.11x slower**.
 
-- **tiny_3x3** (GPU): `csr_scalar` at 0.004848 ms vs `bcsr` at 0.004672 ms -> **1.04x slower**.
+- **tiny_3x3** (GPU): `csr_scalar` at 0.005104 ms vs `csr_vector` at 0.004768 ms -> **1.07x slower**.
 
-- **uniform_random** (GPU): `csr_vector` at 0.1046 ms vs `ell` at 0.06621 ms -> **1.58x slower**.
+- **uniform_random** (GPU): `csr_vector` at 0.1024 ms vs `ell` at 0.06554 ms -> **1.56x slower**.
 
-- **wiki-Vote** (GPU): `csr_merge` at 0.02616 ms vs `csr_vector` at 0.007744 ms -> **3.38x slower**.
+- **wiki-Vote** (GPU): `csr_merge` at 0.02635 ms vs `csr_vector` at 0.01434 ms -> **1.84x slower**.
 
 
 ## Accuracy (max relative error, CSR SpMV)
