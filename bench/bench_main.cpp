@@ -279,7 +279,20 @@ AutoResult evaluate_matrix_gpu(const std::string& path, int iters, int warmup) {
          2.0 * static_cast<double>(A.nnz) / (r.median_ms * 1e-3) / 1e9, true});
   };
   run(KernelId::CsrScalar, "csr_scalar", 1, 1);
-  run(KernelId::CsrVector, "csr_vector", choice.lanes, 1);
+  // The oracle must evaluate the vector kernel at a meaningful lane count even
+  // when the heuristic chose a different kernel (choice.lanes is 1 for
+  // merge/scalar). Use the vector rule's next_pow2(mean_row_nnz), capped at 32.
+  int oracle_lanes = choice.lanes;
+  if (choice.kernel != KernelId::CsrVector) {
+    int v = static_cast<int>(std::ceil(s.mean_row_nnz));
+    if (v < 1)
+      v = 1;
+    int p = 1;
+    while (p < v && p < 32)
+      p <<= 1;
+    oracle_lanes = std::min(p, 32);
+  }
+  run(KernelId::CsrVector, "csr_vector", oracle_lanes, 1);
   run(KernelId::CsrWarp, "csr_warp", 1, 1);
   run(KernelId::CsrMerge, "csr_merge", 1, 1);
   run(KernelId::Ell, "ell", 1, 1);
