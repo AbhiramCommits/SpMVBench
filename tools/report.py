@@ -74,16 +74,23 @@ def build_summary():
                      f"**{gpu_info.get('assumed_peak_gbs','?')} GB/s** "
                      f"(vendor spec assumed from the device name). Achieved "
                      f"bandwidth uses the no-reuse traffic model.\n")
-    lines.append("Kernel times are medians over 50+ CUDA-event / steady-clock "
-                 "iterations after warmup, excluding host-device transfers; "
+    lines.append("GPU timings are medians over 50 CUDA-event iterations after "
+                 "warmup; CPU timings are medians over 10 steady-clock "
+                 "iterations. Kernel time excludes host-device transfers; "
                  "`transfer` is the separate H2D+D2H time.\n")
+    lines.append("Bandwidth uses the no-reuse traffic model. Values above "
+                 "100% of peak mean that model overcounts DRAM traffic because "
+                 "the input vector is partly served from cache; `bw_lo_gbs` in "
+                 "`bench.csv` is the compulsory-traffic lower bound.\n")
 
     # ---- headline: best non-baseline kernel per device/matrix/precision -----
     lines.append("## Headline: best kernel per device, matrix, precision\n")
     lines.append("| device | matrix | prec | best kernel | median ms | min ms | "
-                 "GFLOP/s | BW GB/s | % peak | transfer ms | speedup |")
+                 "GFLOP/s | BW lo GB/s | BW hi GB/s | % peak (hi) | transfer ms | "
+                 "speedup |")
     lines.append("|--------|--------|------|-------------|----------:|-------:|"
-                 "--------:|--------:|-------:|------------:|--------:|")
+                 "--------:|-----------:|-----------:|------------:|"
+                 "------------:|--------:|")
     best_rows = {}
     for r in bench:
         if is_true(r["is_baseline"]):
@@ -100,7 +107,8 @@ def build_summary():
         lines.append(
             f"| {device_label(r['device'])} | {r['matrix']} | {r['precision']} | "
             f"{r['kernel']} | {fmt(r['median_ms'])} | {fmt(r['min_ms'])} | "
-            f"{fmt(r['gflops'])} | {fmt(r['bw_hi_gbs'])} | {fmt(pct) if pct != 'n/a' else pct} | "
+            f"{fmt(r['gflops'])} | {fmt(r['bw_lo_gbs'])} | "
+            f"{fmt(r['bw_hi_gbs'])} | {fmt(pct) if pct != 'n/a' else pct} | "
             f"{fmt(r['transfer_ms'])} | {fmt(r['speedup'],3)}x |"
         )
 

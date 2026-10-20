@@ -1,6 +1,10 @@
-matrix,chosen,oracle_best,chosen_ms,best_ms,hit,slowdown
-banded_100k,csr_vector,csr_vector,0.0772979,0.0772979,1,1
-diag_dominant_small,csr_scalar,csr_scalar,0.00654585,0.00654585,1,1
-powerlaw_skew,csr_merge,csr_vector,0.203654,0.195015,0,1.0443
-tiny_3x3,csr_scalar,csr_scalar,6.25e-06,6.25e-06,1,1
-uniform_random,csr_vector,csr_vector,0.210929,0.210929,1,1
+matrix,device,chosen,oracle_best,chosen_ms,best_ms,hit,slowdown
+amazon0302,cuda,csr_vector,ell,0.119216,0.09424,0,1.26503
+banded_100k,cuda,csr_vector,ell,0.049248,0.03624,0,1.35894
+cage10,cuda,csr_vector,ell,0.014336,0.010352,0,1.38485
+cfd1,cuda,csr_vector,ell,0.144912,0.121088,0,1.19675
+diag_dominant_small,cuda,csr_scalar,csr_vector,0.007456,0.005808,0,1.28375
+powerlaw_skew,cuda,csr_merge,csr_vector,0.229472,0.032048,0,7.16026
+tiny_3x3,cuda,csr_scalar,bcsr,0.004848,0.004672,0,1.03767
+uniform_random,cuda,csr_vector,ell,0.10456,0.066208,0,1.57927
+wiki-Vote,cuda,csr_merge,csr_vector,0.02616,0.007744,0,3.3781

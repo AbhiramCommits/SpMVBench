@@ -1,0 +1,6 @@
+name=Tesla T4
+compute_capability=7.5
+assumed_peak_gbs=320
+peak_source=vendor spec assumed from device name
+bandwidth_model=no-reuse (x/B fetched per nonzero)
+mkl_available=0
