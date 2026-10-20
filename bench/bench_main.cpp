@@ -524,11 +524,13 @@ std::vector<BenchRow> bench_cpu_type(const std::string& name,
   {
     const auto ell = spmvbench::csr_to_ell(A);
     const ByteModel eb = [&] {
-      const double pn = static_cast<double>(ell.padded_nnz);
-      const double v = pn * sizeof(T), c = pn * sizeof(Index);
+      // The kernel walks only real entries (row_lengths), so the traffic model
+      // uses nnz, not the padded allocation.
+      const double entries = static_cast<double>(ell.nnz);
+      const double v = entries * sizeof(T), c = entries * sizeof(Index);
       const double ybytes = static_cast<double>(m) * sizeof(Acc);
       return ByteModel{v + c + static_cast<double>(n) * sizeof(T) + ybytes,
-                       v + c + pn * sizeof(T) + ybytes};
+                       v + c + entries * sizeof(T) + ybytes};
     }();
     add("ell_omp",
         run([&] { spmvbench::spmv_ell_cpu<T, Acc>(ell, x.data(), y.data()); }),
@@ -657,11 +659,12 @@ std::vector<BenchRow> bench_gpu_type(const std::string& name,
   for (const auto& spec : specs) {
     ByteModel m2 = bm;
     if (spec.id == KernelId::Ell) {
-      const double pn = static_cast<double>(runner.ell_padded_nnz());
-      const double v = pn * sizeof(T), c = pn * sizeof(Index);
+      // Only real entries are read; the padded allocation is not traffic.
+      const double entries = static_cast<double>(runner.ell_touched_nnz());
+      const double v = entries * sizeof(T), c = entries * sizeof(Index);
       const double ybytes = static_cast<double>(m) * sizeof(Acc);
       m2 = ByteModel{v + c + static_cast<double>(n) * sizeof(T) + ybytes,
-                     v + c + pn * sizeof(T) + ybytes};
+                     v + c + entries * sizeof(T) + ybytes};
     } else if (spec.id == KernelId::Bcsr) {
       const double bn = static_cast<double>(runner.bcsr_block_nnz(spec.block));
       const double R = spec.block, C = spec.block;

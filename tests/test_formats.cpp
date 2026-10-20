@@ -31,6 +31,10 @@ TEST(Formats, EllPaddingMath) {
   EXPECT_DOUBLE_EQ(ell.padding_overhead(), 12.0 / 7.0);
   EXPECT_EQ(ell.values.size(), 12u);
   EXPECT_EQ(ell.colind.size(), 12u);
+  ASSERT_EQ(ell.row_lengths.size(), 3u);
+  EXPECT_EQ(ell.row_lengths[0], 2);
+  EXPECT_EQ(ell.row_lengths[1], 1);
+  EXPECT_EQ(ell.row_lengths[2], 4);
 
   // Padding entries are column 0 / value 0.
   // Row 1 has a single entry at j=0; j=1,2,3 are padding.

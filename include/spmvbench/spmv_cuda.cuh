@@ -64,6 +64,7 @@ template <typename T>
 struct DeviceEll {
   const Index* colind = nullptr;  // column-major, size m*max_row_nnz
   const T* values = nullptr;
+  const int* row_lengths = nullptr;  // actual entries per row
   int m = 0;
   int n = 0;
   int max_row_nnz = 0;
@@ -134,7 +135,8 @@ class SpmvRunner {
   std::vector<Acc> result() const;
 
   // Storage sizes of the converted formats (for bandwidth models).
-  std::int64_t ell_padded_nnz() const;
+  std::int64_t ell_padded_nnz() const;   // allocated (padded) ELL slots
+  std::int64_t ell_touched_nnz() const;  // entries actually read by the kernel
   std::int64_t bcsr_block_nnz(int block) const;  // block = 2 or 4
 
  private:
@@ -153,6 +155,7 @@ class SpmvRunner {
   Index* d_rowptr_ = nullptr;
   T* d_ell_values_ = nullptr;
   Index* d_ell_colind_ = nullptr;
+  int* d_ell_row_lengths_ = nullptr;
   T* d_b2_values_ = nullptr;
   Index* d_b2_colind_ = nullptr;
   Index* d_b2_rowptr_ = nullptr;

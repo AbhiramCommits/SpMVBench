@@ -24,6 +24,9 @@ struct EllMatrix {
   std::int64_t padded_nnz = 0;  // m * max_row_nnz
   std::vector<Index> colind;    // size padded_nnz, column-major
   std::vector<T> values;        // size padded_nnz, column-major
+  // Actual entries per row. Storage is still padded to max_row_nnz, but the
+  // kernels walk only these entries and never touch the padding.
+  std::vector<int> row_lengths;  // size m
 
   // Padding overhead ratio: how many more entries we store than we need.
   double padding_overhead() const {

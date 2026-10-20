@@ -27,9 +27,12 @@ EllMatrix<T> csr_to_ell(const CsrMatrix<T>& csr) {
   ell.padded_nnz = static_cast<std::int64_t>(csr.m) * max_row;
   ell.colind.assign(static_cast<std::size_t>(ell.padded_nnz), 0);
   ell.values.assign(static_cast<std::size_t>(ell.padded_nnz), T(0));
+  ell.row_lengths.resize(static_cast<std::size_t>(csr.m));
 
   for (int i = 0; i < csr.m; ++i) {
     int j = 0;
+    ell.row_lengths[static_cast<std::size_t>(i)] =
+        static_cast<int>(csr.rowptr[i + 1] - csr.rowptr[i]);
     for (Index p = csr.rowptr[i]; p < csr.rowptr[i + 1]; ++p, ++j) {
       // Column-major layout: entry j of row i lives at j * m + i.
       ell.colind[static_cast<std::size_t>(j) * csr.m + i] = csr.colind[p];

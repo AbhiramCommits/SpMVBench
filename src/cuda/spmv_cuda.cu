@@ -132,7 +132,9 @@ __global__ void ell_kernel(DeviceEll<T> A, const T* __restrict__ x,
   if (row >= A.m)
     return;
   Acc sum = Acc(0);
-  for (int j = 0; j < A.max_row_nnz; ++j) {
+  // Only the real entries: the padded tail is allocated but never read.
+  const int J = A.row_lengths[row];
+  for (int j = 0; j < J; ++j) {
     const Index p = static_cast<Index>(j) * A.m + row;  // column-major
     sum += static_cast<Acc>(A.values[p]) * static_cast<Acc>(x[A.colind[p]]);
   }
@@ -258,9 +260,12 @@ void SpmvRunner<T, Acc>::upload_matrix() {
               static_cast<std::size_t>(ell.padded_nnz) * sizeof(T));
   cuda_malloc(&d_ell_colind_,
               static_cast<std::size_t>(ell.padded_nnz) * sizeof(Index));
+  cuda_malloc(&d_ell_row_lengths_, static_cast<std::size_t>(m) * sizeof(int));
   copy_to_device(d_ell_values_, ell.values);
   copy_to_device(d_ell_colind_, ell.colind);
-  d_ell_ = DeviceEll<T>{d_ell_colind_, d_ell_values_, m, n, ell.max_row_nnz};
+  copy_to_device(d_ell_row_lengths_, ell.row_lengths);
+  d_ell_ = DeviceEll<T>{d_ell_colind_,  d_ell_values_, d_ell_row_lengths_, m, n,
+                        ell.max_row_nnz};
 
   // BCSR 2x2 and 4x4
   auto upload_bcsr = [&](auto tag, T** v, Index** c, Index** r,
@@ -291,6 +296,7 @@ void SpmvRunner<T, Acc>::free_buffers() {
   cudaFree(d_values_);
   cudaFree(d_ell_values_);
   cudaFree(d_ell_colind_);
+  cudaFree(d_ell_row_lengths_);
   cudaFree(d_b2_values_);
   cudaFree(d_b2_colind_);
   cudaFree(d_b2_rowptr_);
@@ -320,6 +326,10 @@ std::vector<Acc> SpmvRunner<T, Acc>::result() const {
 template <typename T, typename Acc>
 std::int64_t SpmvRunner<T, Acc>::ell_padded_nnz() const {
   return static_cast<std::int64_t>(d_ell_.m) * d_ell_.max_row_nnz;
+}
+
+std::int64_t SpmvRunner<T, Acc>::ell_touched_nnz() const {
+  return A_.nnz;
 }
 
 template <typename T, typename Acc>

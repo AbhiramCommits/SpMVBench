@@ -56,10 +56,13 @@ template <typename T, typename Acc>
 void spmv_ell_cpu(const EllMatrix<T>& A, const T* x, Acc* y, int nthreads) {
   SPMVBENCH_SET_THREADS(nthreads);
   const int m = A.m;
-  const int J = A.max_row_nnz;
 #pragma omp parallel for schedule(static)
   for (int i = 0; i < m; ++i) {
     Acc sum = Acc(0);
+    // Walk only the real entries; the padded tail is never read.
+    const int J = A.row_lengths.empty()
+                      ? A.max_row_nnz
+                      : A.row_lengths[static_cast<std::size_t>(i)];
     for (int j = 0; j < J; ++j) {
       const Index p = static_cast<Index>(j) * m + i;  // column-major
       sum += static_cast<Acc>(A.values[p]) * static_cast<Acc>(x[A.colind[p]]);
