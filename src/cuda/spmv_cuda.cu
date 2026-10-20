@@ -328,6 +328,7 @@ std::int64_t SpmvRunner<T, Acc>::ell_padded_nnz() const {
   return static_cast<std::int64_t>(d_ell_.m) * d_ell_.max_row_nnz;
 }
 
+template <typename T, typename Acc>
 std::int64_t SpmvRunner<T, Acc>::ell_touched_nnz() const {
   return A_.nnz;
 }
