@@ -1,0 +1,9 @@
+==PROF== Connected to process 18732 (/content/SpMVBench/build/bench)
+[bench] uniform_random ...
+==PROF== Profiling "csr_merge_kernel": 0%....50%....100% - 33 passes
+[bench] GPU: Tesla T4 (sm_75), assumed theoretical peak HBM bandwidth = 320.0 GB/s
+[bench] peak is the vendor spec value assumed from the device name; bandwidth % is the no-reuse model vs this peak
+[bench] MKL baseline: not available
+[bench] wrote results/bench.csv (28 rows), results/bench.md, results/gpu_info.txt
+==PROF== Disconnected from process 18732
+==PROF== Report: /content/SpMVBench/results/ncu/uniform_random__csr_merge.ncu-rep
