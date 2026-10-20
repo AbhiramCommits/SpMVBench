@@ -1,13 +1,15 @@
 matrix                   device chosen         oracle_best     chosen_ms    best_ms    hit   slowdown
-amazon0302               cuda   csr_vector     ell                0.2212     0.0957     no       2.31
-banded_100k              cuda   csr_vector     ell                0.0492     0.0358     no       1.37
-cage10                   cuda   csr_vector     ell                0.0143     0.0104     no       1.38
-cfd1                     cuda   csr_vector     ell                0.1456     0.1209     no       1.20
-diag_dominant_small      cuda   csr_scalar     csr_vector         0.0074     0.0061     no       1.21
-powerlaw_skew            cuda   csr_merge      csr_warp           0.2446     0.2212     no       1.11
-tiny_3x3                 cuda   csr_scalar     csr_vector         0.0051     0.0048     no       1.07
-uniform_random           cuda   csr_vector     ell                0.1024     0.0655     no       1.56
-wiki-Vote                cuda   csr_merge      csr_vector         0.0264     0.0143     no       1.84
+amazon0302               cuda   csr_vector     ell                0.1199     0.1004     no       1.19
+banded_100k              cuda   csr_vector     ell                0.0502     0.0371     no       1.35
+cage10                   cuda   csr_vector     ell                0.0144     0.0099     no       1.45
+cfd1                     cuda   csr_vector     ell                0.1454     0.1033     no       1.41
+diag_dominant_small      cuda   csr_scalar     csr_vector         0.0071     0.0061     no       1.15
+powerlaw_skew            cuda   csr_merge      csr_warp           0.2458     0.2197     no       1.12
+tiny_3x3                 cuda   csr_scalar     csr_vector         0.0056     0.0049     no       1.15
+uniform_random           cuda   csr_vector     ell                0.1027     0.0657     no       1.56
+wiki-Vote                cuda   csr_merge      csr_vector         0.0264     0.0144     no       1.84
 
-heuristic-vs-oracle: 0/9 matrices picked the fastest kernel; worst slowdown 2.31x
+heuristic-vs-oracle: 0/9 matrices picked the fastest kernel; worst slowdown 1.84x
 wrote results/heuristic.csv
+
+(exit 0)

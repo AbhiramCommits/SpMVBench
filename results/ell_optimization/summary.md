@@ -40,12 +40,16 @@ harness:
 
 ## Results
 
-| matrix | precision | before, median of 3 runs | after, median of 3 runs | speedup |
+| matrix | precision | before, median (min–max) | after, median (min–max) | speedup |
 |--------|-----------|--------------------------:|-------------------------:|--------:|
-| `powerlaw_skew` | fp64 | 12.9791 ± 0.0013 ms | 1.3470 ± 0.1648 ms | **9.64×** |
-| `powerlaw_skew` | fp32 | 9.6621 ± 0.0016 ms | 0.7997 ± 0.0089 ms | **12.08×** |
-| `uniform_random` | fp64 | 0.0655 ± 0.0002 ms | 0.0665 ± 0.0007 ms | 0.99× |
-| `uniform_random` | fp32 | 0.0513 ± 0.0001 ms | 0.0526 ± 0.0002 ms | 0.98× |
+| `powerlaw_skew` | fp64 | 12.9786 ms (12.9777–12.9809) | 1.3046 ms (1.1698–1.5667) | **9.95×** |
+| `powerlaw_skew` | fp32 | 9.6625 ms (9.6600–9.6637) | 0.8029 ms (0.7876–0.8087) | **12.03×** |
+| `uniform_random` | fp64 | 0.06546 ms (0.06539–0.06579) | 0.06680 ms (0.06554–0.06707) | 0.98× |
+| `uniform_random` | fp32 | 0.05134 ms (0.05120–0.05144) | 0.05264 ms (0.05224–0.05283) | 0.98× |
+
+The speedup column is the ratio of the before and after **medians**, not a mean
+of per-run speedups. With three runs per side the median is one of the measured
+values; the parenthesized range is min–max, not a standard deviation.
 
 Raw per-run rows: `timings.csv`; the twelve full bench CSVs and the rebuild /
 ctest logs are in this directory.
@@ -56,11 +60,12 @@ ctest logs are in this directory.
 
 1. The before side is extremely stable: fp64 12.9777–12.9809 ms, fp32
    9.6600–9.6637 ms. There is no baseline drift to explain a 10× move.
-2. Every after run is faster than every before run. The worst paired speedup
-   is **8.28×**; the best is **11.10×**. The fp64 after side varies more
-   (1.17–1.57 ms), but that variance is still far below the effect.
-3. The control behaves as expected: `uniform_random` moves by −1% to −2%,
-   which is noise. If the improvement were a clock or harness artifact, the
+2. Every after run is faster than every before run. Paired run speedups are
+   **8.29–11.09×** for fp64 and **11.95–12.27×** for fp32. The fp64 after side
+   varies more (1.17–1.57 ms), but that variance is still far below the effect.
+3. The control behaves as expected: `uniform_random` moves by less than 3% in
+   either direction (0.98× median speedup), which is the same order as
+   run-to-run noise. If the improvement were a clock or harness artifact, the
    control would move too.
 
 The larger fp64 variance after the change is run-to-run GPU scheduling/clock
@@ -68,11 +73,14 @@ noise on the shared Colab T4; the kernel is now latency-bound rather than
 bandwidth-bound, so it is more sensitive to when the long rows land on the
 SMs. It does not change the conclusion.
 
-One honest caveat: the optimized ELL is still about 6× slower than `csr_warp`
-on `powerlaw_skew` (0.22 ms), because one thread per row still serializes the
-8000-entry row. The padded-traffic bottleneck identified by ncu is fixed; the
-next step for this matrix would be warp-per-row or hybrid handling for the
-long rows.
+One honest caveat: the optimized ELL is still about 5.9× slower than `csr_warp`
+on `powerlaw_skew` (1.30 ms vs 0.22 ms), because one thread per row still
+serializes the 8000-entry row. The padded-traffic bottleneck identified by ncu
+is fixed; the next step for this matrix would be warp-per-row or hybrid
+handling for the long rows.
 
-`results/bench.csv` remains the pre-optimization full benchmark snapshot; this
-directory is the controlled before/after experiment.
+`results/bench.csv` has now been re-run on the current code; this directory
+remains the controlled before/after experiment. Because the A/B used
+`--bench --gpu-only`, its absolute times are not directly comparable to the
+full sweep (for example, `uniform_random` fp64 is 0.0668 ms here but 0.1019 ms
+in the full sweep).

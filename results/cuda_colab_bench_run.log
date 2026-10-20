@@ -1,15 +1,28 @@
 
 ==============================================================================
+$ git clone --quiet https://github.com/AbhiramCommits/SpMVBench.git /content/SpMVBench
+==============================================================================
+
+(exit 0)
+
+==============================================================================
+$ git rev-parse HEAD
+==============================================================================
+604fd9a16d5830a0934c64f12b2e93cf1865d1e0
+
+(exit 0)
+
+==============================================================================
 $ uname -a
 ==============================================================================
-Linux 0b7422ad5f83 6.6.122+ #1 SMP Thu Apr 30 18:17:14 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
+Linux 3fff3960a4b0 6.6.122+ #1 SMP Thu Apr 30 18:17:14 UTC 2026 x86_64 x86_64 x86_64 GNU/Linux
 
 (exit 0)
 
 ==============================================================================
 $ nvidia-smi
 ==============================================================================
-Mon Oct 19 23:51:57 2026       
+Tue Oct 20 03:02:26 2026
 +-----------------------------------------------------------------------------------------+
 | NVIDIA-SMI 580.82.07              Driver Version: 580.82.07      CUDA Version: 13.0     |
 +-----------------------------------------+------------------------+----------------------+
@@ -18,7 +31,7 @@ Mon Oct 19 23:51:57 2026
 |                                         |                        |               MIG M. |
 |=========================================+========================+======================|
 |   0  Tesla T4                       Off |   00000000:00:04.0 Off |                    0 |
-| N/A   63C    P8             10W /   70W |       0MiB /  15360MiB |      0%      Default |
+| N/A   49C    P8              9W /   70W |       0MiB /  15360MiB |      0%      Default |
 |                                         |                        |                  N/A |
 +-----------------------------------------+------------------------+----------------------+
 
@@ -55,6 +68,13 @@ Tesla T4, 580.82.07, 15360 MiB, 7.5
 $ nproc
 ==============================================================================
 2
+
+(exit 0)
+
+==============================================================================
+$ python3 -c "import numpy, scipy; print('numpy', numpy.__version__, 'scipy', scipy.__version__)"
+==============================================================================
+numpy 2.1.3 scipy 1.16.3
 
 (exit 0)
 
@@ -128,7 +148,7 @@ $ cmake -S . -B build -DSPMVBENCH_ENABLE_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75 -
 -- Detecting C compile features
 -- Detecting C compile features - done
 -- Found Python3: /usr/local/bin/python (found version "3.13.15") found components: Interpreter
--- Configuring done (9.9s)
+-- Configuring done (11.6s)
 -- Generating done (0.0s)
 -- Build files have been written to: /content/SpMVBench/build
 
@@ -137,19 +157,19 @@ $ cmake -S . -B build -DSPMVBENCH_ENABLE_CUDA=ON -DCMAKE_CUDA_ARCHITECTURES=75 -
 ==============================================================================
 $ cmake --build build -j
 ==============================================================================
-[  3%] Building CXX object _deps/googletest-build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o
-[  6%] Building CXX object CMakeFiles/spmvbench_core.dir/src/mtx_io.cpp.o
-[  9%] Building CXX object CMakeFiles/spmvbench_core.dir/src/stats.cpp.o
-[ 12%] Building CXX object CMakeFiles/spmvbench_core.dir/src/formats.cpp.o
-[ 15%] Building CXX object CMakeFiles/spmvbench_core.dir/src/cpu/spmm_cpu.cpp.o
-[ 18%] Building CXX object CMakeFiles/spmvbench_core.dir/src/cpu/spmv_cpu.cpp.o
-[ 21%] Building CXX object CMakeFiles/spmvbench_core.dir/src/cpu/mkl_spmv.cpp.o
-[ 24%] Building CXX object CMakeFiles/spmvbench_core.dir/src/validate.cpp.o
-[ 27%] Building CXX object CMakeFiles/spmvbench_core.dir/src/select.cpp.o
-[ 30%] Building CUDA object CMakeFiles/spmvbench_core.dir/src/cuda/spmv_cuda.cu.o
+[  6%] Building CXX object CMakeFiles/spmvbench_core.dir/src/formats.cpp.o
+[  6%] Building CXX object _deps/googletest-build/googletest/CMakeFiles/gtest.dir/src/gtest-all.cc.o
+[  9%] Building CXX object CMakeFiles/spmvbench_core.dir/src/mtx_io.cpp.o
+[ 12%] Building CXX object CMakeFiles/spmvbench_core.dir/src/cpu/spmm_cpu.cpp.o
+[ 15%] Building CXX object CMakeFiles/spmvbench_core.dir/src/cpu/spmv_cpu.cpp.o
+[ 18%] Building CXX object CMakeFiles/spmvbench_core.dir/src/stats.cpp.o
+[ 21%] Building CXX object CMakeFiles/spmvbench_core.dir/src/select.cpp.o
+[ 24%] Building CXX object CMakeFiles/spmvbench_core.dir/src/cpu/mkl_spmv.cpp.o
+[ 27%] Building CUDA object CMakeFiles/spmvbench_core.dir/src/cuda/spmv_cuda.cu.o
+[ 30%] Building CXX object CMakeFiles/spmvbench_core.dir/src/validate.cpp.o
+[ 33%] Building CUDA object CMakeFiles/spmvbench_core.dir/src/cuda/spmm_cuda.cu.o
 [ 36%] Building CUDA object CMakeFiles/spmvbench_core.dir/src/cuda/cusparse_baseline.cu.o
 [ 39%] Building CUDA object CMakeFiles/spmvbench_core.dir/src/cuda/cusparse_spmm.cu.o
-[ 33%] Building CUDA object CMakeFiles/spmvbench_core.dir/src/cuda/spmm_cuda.cu.o
 [ 42%] Linking CXX static library libspmvbench_core.a
 [ 42%] Built target spmvbench_core
 [ 45%] Building CXX object CMakeFiles/bench.dir/bench/bench_main.cpp.o
@@ -158,15 +178,15 @@ $ cmake --build build -j
 [ 51%] Built target bench
 [ 54%] Linking CXX static library ../../../lib/libgtest.a
 [ 54%] Built target gtest
-[ 57%] Building CXX object _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o
+[ 60%] Building CXX object _deps/googletest-build/googletest/CMakeFiles/gtest_main.dir/src/gtest_main.cc.o
 [ 60%] Building CXX object _deps/googletest-build/googlemock/CMakeFiles/gmock.dir/src/gmock-all.cc.o
 [ 63%] Linking CXX static library ../../../lib/libgtest_main.a
 [ 63%] Built target gtest_main
 [ 66%] Building CXX object tests/CMakeFiles/spmvbench_tests.dir/test_mtx_io.cpp.o
-[ 75%] Building CXX object tests/CMakeFiles/spmvbench_tests.dir/test_stats.cpp.o
-[ 75%] Building CXX object tests/CMakeFiles/spmvbench_tests.dir/test_formats.cpp.o
+[ 69%] Building CXX object tests/CMakeFiles/spmvbench_tests.dir/test_formats.cpp.o
+[ 72%] Building CXX object tests/CMakeFiles/spmvbench_tests.dir/test_stats.cpp.o
+[ 78%] Building CXX object tests/CMakeFiles/spmvbench_tests.dir/test_spmm_correctness.cpp.o
 [ 75%] Building CXX object tests/CMakeFiles/spmvbench_tests.dir/test_spmv_correctness.cpp.o
-[ 81%] Building CXX object tests/CMakeFiles/spmvbench_tests.dir/test_spmm_correctness.cpp.o
 [ 81%] Building CXX object tests/CMakeFiles/spmvbench_tests.dir/test_select.cpp.o
 [ 84%] Building CXX object tests/CMakeFiles/spmvbench_tests.dir/test_cuda_correctness.cpp.o
 [ 87%] Linking CXX static library ../../../lib/libgmock.a
@@ -186,7 +206,7 @@ $ ctest --test-dir build --output-on-failure
 Internal ctest changing into directory: /content/SpMVBench/build
 Test project /content/SpMVBench/build
       Start  1: MtxIo.SymmetricExpansion
- 1/57 Test  #1: MtxIo.SymmetricExpansion ...........................................   Passed    0.01 sec
+ 1/57 Test  #1: MtxIo.SymmetricExpansion ...........................................   Passed    0.02 sec
       Start  2: MtxIo.OneBasedIndices
  2/57 Test  #2: MtxIo.OneBasedIndices ..............................................   Passed    0.01 sec
       Start  3: MtxIo.PatternGivesUnitValues
@@ -208,9 +228,9 @@ Test project /content/SpMVBench/build
       Start 11: Formats.Bcsr4x4
 11/57 Test #11: Formats.Bcsr4x4 ....................................................   Passed    0.01 sec
       Start 12: Formats.BcsrDensity
-12/57 Test #12: Formats.BcsrDensity ................................................   Passed    0.01 sec
+12/57 Test #12: Formats.BcsrDensity ................................................   Passed    0.02 sec
       Start 13: Stats.HandComputedUniformish
-13/57 Test #13: Stats.HandComputedUniformish .......................................   Passed    0.01 sec
+13/57 Test #13: Stats.HandComputedUniformish .......................................   Passed    0.02 sec
       Start 14: Stats.ConstantRowsHaveZeroCv
 14/57 Test #14: Stats.ConstantRowsHaveZeroCv .......................................   Passed    0.01 sec
       Start 15: Stats.SkewedCv
@@ -224,17 +244,17 @@ Test project /content/SpMVBench/build
       Start 19: SpmvCorrectness.OneHeavyRow
 19/57 Test #19: SpmvCorrectness.OneHeavyRow ........................................   Passed    0.01 sec
       Start 20: SpmvCorrectness.UnsortedColumns
-20/57 Test #20: SpmvCorrectness.UnsortedColumns ....................................   Passed    0.02 sec
+20/57 Test #20: SpmvCorrectness.UnsortedColumns ....................................   Passed    0.01 sec
       Start 21: SpmvCorrectness.AllZeroMatrix
-21/57 Test #21: SpmvCorrectness.AllZeroMatrix ......................................   Passed    0.02 sec
+21/57 Test #21: SpmvCorrectness.AllZeroMatrix ......................................   Passed    0.01 sec
       Start 22: SpmvCorrectness.GeneratedMatrices
-22/57 Test #22: SpmvCorrectness.GeneratedMatrices ..................................   Passed    0.48 sec
+22/57 Test #22: SpmvCorrectness.GeneratedMatrices ..................................   Passed    0.49 sec
       Start 23: SpmmCorrectness.K1
-23/57 Test #23: SpmmCorrectness.K1 .................................................   Passed    0.02 sec
+23/57 Test #23: SpmmCorrectness.K1 .................................................   Passed    0.01 sec
       Start 24: SpmmCorrectness.K15
-24/57 Test #24: SpmmCorrectness.K15 ................................................   Passed    0.02 sec
+24/57 Test #24: SpmmCorrectness.K15 ................................................   Passed    0.01 sec
       Start 25: SpmmCorrectness.K32
-25/57 Test #25: SpmmCorrectness.K32 ................................................   Passed    0.02 sec
+25/57 Test #25: SpmmCorrectness.K32 ................................................   Passed    0.01 sec
       Start 26: SpmmCorrectness.K64
 26/57 Test #26: SpmmCorrectness.K64 ................................................   Passed    0.01 sec
       Start 27: SpmmCorrectness.MixedPrecisionAccumulate
@@ -254,55 +274,55 @@ Test project /content/SpMVBench/build
       Start 34: Select.ReasonIsNonEmpty
 34/57 Test #34: Select.ReasonIsNonEmpty ............................................   Passed    0.01 sec
       Start 35: CudaSpmmEdgeK.TinyK1
-35/57 Test #35: CudaSpmmEdgeK.TinyK1 ...............................................   Passed    0.42 sec
+35/57 Test #35: CudaSpmmEdgeK.TinyK1 ...............................................   Passed    0.43 sec
       Start 36: CudaSpmmEdgeK.TinyK15
-36/57 Test #36: CudaSpmmEdgeK.TinyK15 ..............................................   Passed    0.29 sec
+36/57 Test #36: CudaSpmmEdgeK.TinyK15 ..............................................   Passed    0.32 sec
       Start 37: CudaSpmmEdgeK.TinyK64
 37/57 Test #37: CudaSpmmEdgeK.TinyK64 ..............................................   Passed    0.28 sec
       Start 38: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"banded_100k"
 38/57 Test #38: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"banded_100k" ...........   Passed    0.75 sec
       Start 39: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"uniform_random"
-39/57 Test #39: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"uniform_random" ........   Passed    1.36 sec
+39/57 Test #39: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"uniform_random" ........   Passed    1.33 sec
       Start 40: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"powerlaw_skew"
-40/57 Test #40: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"powerlaw_skew" .........   Passed    3.06 sec
+40/57 Test #40: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"powerlaw_skew" .........   Passed    3.13 sec
       Start 41: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"diag_dominant_small"
-41/57 Test #41: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"diag_dominant_small" ...   Passed    0.35 sec
+41/57 Test #41: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"diag_dominant_small" ...   Passed    0.34 sec
       Start 42: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"tiny_3x3"
-42/57 Test #42: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"tiny_3x3" ..............   Passed    0.31 sec
+42/57 Test #42: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"tiny_3x3" ..............   Passed    0.28 sec
       Start 43: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"banded_100k"
-43/57 Test #43: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"banded_100k" ...........   Passed    0.76 sec
+43/57 Test #43: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"banded_100k" ...........   Passed    0.79 sec
       Start 44: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"uniform_random"
-44/57 Test #44: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"uniform_random" ........   Passed    1.52 sec
+44/57 Test #44: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"uniform_random" ........   Passed    1.66 sec
       Start 45: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"powerlaw_skew"
-45/57 Test #45: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"powerlaw_skew" .........   Passed    3.76 sec
+45/57 Test #45: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"powerlaw_skew" .........   Passed    3.90 sec
       Start 46: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"diag_dominant_small"
-46/57 Test #46: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"diag_dominant_small" ...   Passed    0.35 sec
+46/57 Test #46: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"diag_dominant_small" ...   Passed    0.33 sec
       Start 47: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"tiny_3x3"
-47/57 Test #47: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"tiny_3x3" ..............   Passed    0.29 sec
+47/57 Test #47: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"tiny_3x3" ..............   Passed    0.30 sec
       Start 48: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"banded_100k"
-48/57 Test #48: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"banded_100k" ...........   Passed    1.33 sec
+48/57 Test #48: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"banded_100k" ...........   Passed    1.36 sec
       Start 49: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"uniform_random"
-49/57 Test #49: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"uniform_random" ........   Passed    1.71 sec
+49/57 Test #49: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"uniform_random" ........   Passed    1.85 sec
       Start 50: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"powerlaw_skew"
-50/57 Test #50: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"powerlaw_skew" .........   Passed    1.41 sec
+50/57 Test #50: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"powerlaw_skew" .........   Passed    1.44 sec
       Start 51: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"diag_dominant_small"
 51/57 Test #51: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"diag_dominant_small" ...   Passed    0.34 sec
       Start 52: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"tiny_3x3"
-52/57 Test #52: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"tiny_3x3" ..............   Passed    0.29 sec
+52/57 Test #52: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"tiny_3x3" ..............   Passed    0.30 sec
       Start 53: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"banded_100k"
-53/57 Test #53: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"banded_100k" ...........   Passed    1.82 sec
+53/57 Test #53: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"banded_100k" ...........   Passed    1.94 sec
       Start 54: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"uniform_random"
-54/57 Test #54: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"uniform_random" ........   Passed    2.08 sec
+54/57 Test #54: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"uniform_random" ........   Passed    2.13 sec
       Start 55: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"powerlaw_skew"
-55/57 Test #55: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"powerlaw_skew" .........   Passed    1.62 sec
+55/57 Test #55: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"powerlaw_skew" .........   Passed    1.75 sec
       Start 56: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"diag_dominant_small"
-56/57 Test #56: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"diag_dominant_small" ...   Passed    0.40 sec
+56/57 Test #56: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"diag_dominant_small" ...   Passed    0.39 sec
       Start 57: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"tiny_3x3"
-57/57 Test #57: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"tiny_3x3" ..............   Passed    0.31 sec
+57/57 Test #57: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"tiny_3x3" ..............   Passed    0.34 sec
 
 100% tests passed, 0 tests failed out of 57
 
-Total Test time (real) =  25.75 sec
+Total Test time (real) =  26.63 sec
 
 (exit 0)
 
@@ -346,34 +366,17 @@ $ ./build/bench --bench --iters 50
 $ ./build/bench --auto --all
 ==============================================================================
 matrix                   device chosen         oracle_best     chosen_ms    best_ms    hit   slowdown
-amazon0302               cuda   csr_vector     ell                0.1192     0.0942     no       1.27
-banded_100k              cuda   csr_vector     ell                0.0492     0.0362     no       1.36
-cage10                   cuda   csr_vector     ell                0.0143     0.0104     no       1.38
-cfd1                     cuda   csr_vector     ell                0.1449     0.1211     no       1.20
-diag_dominant_small      cuda   csr_scalar     csr_vector         0.0075     0.0058     no       1.28
-powerlaw_skew            cuda   csr_merge      csr_vector         0.2295     0.0320     no       7.16
-tiny_3x3                 cuda   csr_scalar     bcsr               0.0048     0.0047     no       1.04
-uniform_random           cuda   csr_vector     ell                0.1046     0.0662     no       1.58
-wiki-Vote                cuda   csr_merge      csr_vector         0.0262     0.0077     no       3.38
+amazon0302               cuda   csr_vector     ell                0.1199     0.1004     no       1.19
+banded_100k              cuda   csr_vector     ell                0.0502     0.0371     no       1.35
+cage10                   cuda   csr_vector     ell                0.0144     0.0099     no       1.45
+cfd1                     cuda   csr_vector     ell                0.1454     0.1033     no       1.41
+diag_dominant_small      cuda   csr_scalar     csr_vector         0.0071     0.0061     no       1.15
+powerlaw_skew            cuda   csr_merge      csr_warp           0.2458     0.2197     no       1.12
+tiny_3x3                 cuda   csr_scalar     csr_vector         0.0056     0.0049     no       1.15
+uniform_random           cuda   csr_vector     ell                0.1027     0.0657     no       1.56
+wiki-Vote                cuda   csr_merge      csr_vector         0.0264     0.0144     no       1.84
 
-heuristic-vs-oracle: 0/9 matrices picked the fastest kernel; worst slowdown 7.16x
+heuristic-vs-oracle: 0/9 matrices picked the fastest kernel; worst slowdown 1.84x
 wrote results/heuristic.csv
 
 (exit 0)
-
-==============================================================================
-$ python3 tools/report.py
-==============================================================================
-[report] wrote results/summary.md
-[report] wrote /content/SpMVBench/results/gflops.png
-
-(exit 0)
-
-==============================================================================
-$ bash scripts/profile.sh
-==============================================================================
-== ncu: csr_vector ==
-==PROF== Connected to process 11335 (/content/SpMVBench/build/bench)
-[bench] amazon0302 ...
-==PROF== Profiling "csr_partition_kernel" - 0: 0%....50%....100% - 32 passes
-==PROF== Profiling "csrmv_v3_kernel" - 1: 0%....50%....100% - 33 passes

@@ -1,49 +1,33 @@
-$ nvidia-smi --query-gpu=name,driver_version,memory.total,compute_cap --format=csv
-name, driver_version, memory.total [MiB], compute_cap
-Tesla T4, 580.82.07, 15360 MiB, 7.5
-
-(exit 0)
-
-$ nvcc --version
-nvcc: NVIDIA (R) Cuda compiler driver
-Copyright (c) 2005-2025 NVIDIA Corporation
-Built on Wed_Aug_20_01:58:59_PM_PDT_2025
-Cuda compilation tools, release 13.0, V13.0.88
-Build cuda_13.0.r13.0/compiler.36424714_0
-
-(exit 0)
-
-$ ctest --test-dir build --output-on-failure
 Internal ctest changing into directory: /content/SpMVBench/build
 Test project /content/SpMVBench/build
       Start  1: MtxIo.SymmetricExpansion
- 1/57 Test  #1: MtxIo.SymmetricExpansion ...........................................   Passed    0.01 sec
+ 1/57 Test  #1: MtxIo.SymmetricExpansion ...........................................   Passed    0.02 sec
       Start  2: MtxIo.OneBasedIndices
  2/57 Test  #2: MtxIo.OneBasedIndices ..............................................   Passed    0.01 sec
       Start  3: MtxIo.PatternGivesUnitValues
  3/57 Test  #3: MtxIo.PatternGivesUnitValues .......................................   Passed    0.01 sec
       Start  4: MtxIo.RejectsComplex
- 4/57 Test  #4: MtxIo.RejectsComplex ...............................................   Passed    0.02 sec
+ 4/57 Test  #4: MtxIo.RejectsComplex ...............................................   Passed    0.01 sec
       Start  5: MtxIo.RejectsArrayFormat
  5/57 Test  #5: MtxIo.RejectsArrayFormat ...........................................   Passed    0.01 sec
       Start  6: MtxIo.RejectsMissingBanner
- 6/57 Test  #6: MtxIo.RejectsMissingBanner .........................................   Passed    0.02 sec
+ 6/57 Test  #6: MtxIo.RejectsMissingBanner .........................................   Passed    0.01 sec
       Start  7: MtxIo.RejectsOutOfRangeIndex
- 7/57 Test  #7: MtxIo.RejectsOutOfRangeIndex .......................................   Passed    0.02 sec
+ 7/57 Test  #7: MtxIo.RejectsOutOfRangeIndex .......................................   Passed    0.01 sec
       Start  8: Formats.EllPaddingMath
- 8/57 Test  #8: Formats.EllPaddingMath .............................................   Passed    0.02 sec
+ 8/57 Test  #8: Formats.EllPaddingMath .............................................   Passed    0.01 sec
       Start  9: Formats.EllPreservesValuesAndSpMV
- 9/57 Test  #9: Formats.EllPreservesValuesAndSpMV ..................................   Passed    0.02 sec
+ 9/57 Test  #9: Formats.EllPreservesValuesAndSpMV ..................................   Passed    0.01 sec
       Start 10: Formats.Bcsr2x2
-10/57 Test #10: Formats.Bcsr2x2 ....................................................   Passed    0.02 sec
+10/57 Test #10: Formats.Bcsr2x2 ....................................................   Passed    0.01 sec
       Start 11: Formats.Bcsr4x4
-11/57 Test #11: Formats.Bcsr4x4 ....................................................   Passed    0.02 sec
+11/57 Test #11: Formats.Bcsr4x4 ....................................................   Passed    0.01 sec
       Start 12: Formats.BcsrDensity
-12/57 Test #12: Formats.BcsrDensity ................................................   Passed    0.03 sec
+12/57 Test #12: Formats.BcsrDensity ................................................   Passed    0.02 sec
       Start 13: Stats.HandComputedUniformish
-13/57 Test #13: Stats.HandComputedUniformish .......................................   Passed    0.04 sec
+13/57 Test #13: Stats.HandComputedUniformish .......................................   Passed    0.02 sec
       Start 14: Stats.ConstantRowsHaveZeroCv
-14/57 Test #14: Stats.ConstantRowsHaveZeroCv .......................................   Passed    0.02 sec
+14/57 Test #14: Stats.ConstantRowsHaveZeroCv .......................................   Passed    0.01 sec
       Start 15: Stats.SkewedCv
 15/57 Test #15: Stats.SkewedCv .....................................................   Passed    0.01 sec
       Start 16: Stats.DenseBlockFraction
@@ -59,7 +43,7 @@ Test project /content/SpMVBench/build
       Start 21: SpmvCorrectness.AllZeroMatrix
 21/57 Test #21: SpmvCorrectness.AllZeroMatrix ......................................   Passed    0.01 sec
       Start 22: SpmvCorrectness.GeneratedMatrices
-22/57 Test #22: SpmvCorrectness.GeneratedMatrices ..................................   Passed    0.45 sec
+22/57 Test #22: SpmvCorrectness.GeneratedMatrices ..................................   Passed    0.49 sec
       Start 23: SpmmCorrectness.K1
 23/57 Test #23: SpmmCorrectness.K1 .................................................   Passed    0.01 sec
       Start 24: SpmmCorrectness.K15
@@ -69,7 +53,7 @@ Test project /content/SpMVBench/build
       Start 26: SpmmCorrectness.K64
 26/57 Test #26: SpmmCorrectness.K64 ................................................   Passed    0.01 sec
       Start 27: SpmmCorrectness.MixedPrecisionAccumulate
-27/57 Test #27: SpmmCorrectness.MixedPrecisionAccumulate ...........................   Passed    0.01 sec
+27/57 Test #27: SpmmCorrectness.MixedPrecisionAccumulate ...........................   Passed    0.02 sec
       Start 28: Select.TinyProblemScalar
 28/57 Test #28: Select.TinyProblemScalar ...........................................   Passed    0.01 sec
       Start 29: Select.ShortRowsScalar
@@ -85,54 +69,54 @@ Test project /content/SpMVBench/build
       Start 34: Select.ReasonIsNonEmpty
 34/57 Test #34: Select.ReasonIsNonEmpty ............................................   Passed    0.01 sec
       Start 35: CudaSpmmEdgeK.TinyK1
-35/57 Test #35: CudaSpmmEdgeK.TinyK1 ...............................................   Passed    0.42 sec
+35/57 Test #35: CudaSpmmEdgeK.TinyK1 ...............................................   Passed    0.43 sec
       Start 36: CudaSpmmEdgeK.TinyK15
-36/57 Test #36: CudaSpmmEdgeK.TinyK15 ..............................................   Passed    0.30 sec
+36/57 Test #36: CudaSpmmEdgeK.TinyK15 ..............................................   Passed    0.32 sec
       Start 37: CudaSpmmEdgeK.TinyK64
-37/57 Test #37: CudaSpmmEdgeK.TinyK64 ..............................................   Passed    0.26 sec
+37/57 Test #37: CudaSpmmEdgeK.TinyK64 ..............................................   Passed    0.28 sec
       Start 38: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"banded_100k"
-38/57 Test #38: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"banded_100k" ...........   Passed    0.71 sec
+38/57 Test #38: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"banded_100k" ...........   Passed    0.75 sec
       Start 39: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"uniform_random"
 39/57 Test #39: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"uniform_random" ........   Passed    1.33 sec
       Start 40: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"powerlaw_skew"
-40/57 Test #40: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"powerlaw_skew" .........   Passed    3.02 sec
+40/57 Test #40: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"powerlaw_skew" .........   Passed    3.13 sec
       Start 41: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"diag_dominant_small"
 41/57 Test #41: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"diag_dominant_small" ...   Passed    0.34 sec
       Start 42: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"tiny_3x3"
 42/57 Test #42: SyntheticMatrices/CudaSpmvCorrectness.Fp32/"tiny_3x3" ..............   Passed    0.28 sec
       Start 43: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"banded_100k"
-43/57 Test #43: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"banded_100k" ...........   Passed    0.75 sec
+43/57 Test #43: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"banded_100k" ...........   Passed    0.79 sec
       Start 44: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"uniform_random"
-44/57 Test #44: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"uniform_random" ........   Passed    1.50 sec
+44/57 Test #44: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"uniform_random" ........   Passed    1.66 sec
       Start 45: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"powerlaw_skew"
-45/57 Test #45: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"powerlaw_skew" .........   Passed    3.72 sec
+45/57 Test #45: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"powerlaw_skew" .........   Passed    3.90 sec
       Start 46: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"diag_dominant_small"
-46/57 Test #46: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"diag_dominant_small" ...   Passed    0.32 sec
+46/57 Test #46: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"diag_dominant_small" ...   Passed    0.33 sec
       Start 47: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"tiny_3x3"
-47/57 Test #47: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"tiny_3x3" ..............   Passed    0.27 sec
+47/57 Test #47: SyntheticMatrices/CudaSpmvCorrectness.Fp64/"tiny_3x3" ..............   Passed    0.30 sec
       Start 48: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"banded_100k"
-48/57 Test #48: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"banded_100k" ...........   Passed    0.98 sec
+48/57 Test #48: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"banded_100k" ...........   Passed    1.36 sec
       Start 49: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"uniform_random"
-49/57 Test #49: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"uniform_random" ........   Passed    1.60 sec
+49/57 Test #49: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"uniform_random" ........   Passed    1.85 sec
       Start 50: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"powerlaw_skew"
-50/57 Test #50: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"powerlaw_skew" .........   Passed    1.33 sec
+50/57 Test #50: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"powerlaw_skew" .........   Passed    1.44 sec
       Start 51: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"diag_dominant_small"
 51/57 Test #51: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"diag_dominant_small" ...   Passed    0.34 sec
       Start 52: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"tiny_3x3"
-52/57 Test #52: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"tiny_3x3" ..............   Passed    0.29 sec
+52/57 Test #52: SyntheticMatrices/CudaSpmmCorrectness.Fp32/"tiny_3x3" ..............   Passed    0.30 sec
       Start 53: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"banded_100k"
-53/57 Test #53: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"banded_100k" ...........   Passed    1.24 sec
+53/57 Test #53: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"banded_100k" ...........   Passed    1.94 sec
       Start 54: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"uniform_random"
-54/57 Test #54: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"uniform_random" ........   Passed    1.96 sec
+54/57 Test #54: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"uniform_random" ........   Passed    2.13 sec
       Start 55: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"powerlaw_skew"
-55/57 Test #55: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"powerlaw_skew" .........   Passed    1.38 sec
+55/57 Test #55: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"powerlaw_skew" .........   Passed    1.75 sec
       Start 56: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"diag_dominant_small"
-56/57 Test #56: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"diag_dominant_small" ...   Passed    0.34 sec
+56/57 Test #56: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"diag_dominant_small" ...   Passed    0.39 sec
       Start 57: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"tiny_3x3"
-57/57 Test #57: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"tiny_3x3" ..............   Passed    0.28 sec
+57/57 Test #57: SyntheticMatrices/CudaSpmmCorrectness.Fp64/"tiny_3x3" ..............   Passed    0.34 sec
 
 100% tests passed, 0 tests failed out of 57
 
-Total Test time (real) =  23.92 sec
+Total Test time (real) =  26.63 sec
 
 (exit 0)
